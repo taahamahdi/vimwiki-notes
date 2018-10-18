@@ -1,6 +1,6 @@
 = Files, Input, Output =
 * Shell - Interface to the OS, get OS to run programs/manage files
-	* Graphical shell - GNOME, i3, GKDE, etc. (touch/click)
+	* Graphical shell - GNOME, i3, KDE, etc. (touch/click)
 	* Command line - type commands at a prompt - more versatile
 * Bash
 * Files, Input, Output

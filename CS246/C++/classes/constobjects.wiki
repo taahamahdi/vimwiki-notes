@@ -1,0 +1,48 @@
+= `Const` Objects =
+
+{{{cpp
+int f(const Node &n) {...}
+}}}
+* `const` objects arise often, especially as parameters
+* What is a `const` object?
+	* Can't change the fields
+* Can we call methods on a `const` object?
+	* *Issue*: The method might modify fields, violating `const`
+	* *Yes*, we can call methods that promise not to modify fields
+		* *Example*: 
+{{{cpp
+struct Student {
+	int assns, mt, final;
+	float grade() const;
+	// Adding const to the end means it doesn't modify fields
+};
+}}}
+			* The compiler checks that `const` methods don't modify fields
+			* Only `const` methods can be called on `const` objects
+			* Now consider: we cant to collect usage statistics on `Student` obejcts
+{{{cpp
+struct Student {
+	...
+	int numCalls = 0;
+	float grade() const {
+		numCalls++;
+		return ...;
+	}
+};
+}}}
+				* Can't call `grade()` on `const Student`s anymore
+					* Mutating `numCalls` affects only the *physical constness* of `Student` objects, not the *logical constness*
+						* Physical constness -- affect on the object itself
+						* Logical constness -- affect on the actual `Student` part (what the real world cares about)
+					* Want to be able to update `numCalls`, even if the object is `const`
+						* Declare the field *mutable* -- can be changed even if the object is `const`
+{{{cpp
+struct Student {
+	...
+	mutable int numCalls = 0;
+	float grade() const {
+		numCalls++;
+		return ...;
+	}
+};
+}}}

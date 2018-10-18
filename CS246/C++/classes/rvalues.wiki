@@ -1,0 +1,62 @@
+= R-values and R-value References =
+
+* Recall:
+	* An l-value is anything with an address
+	* An l-value reference (`&`) is like a `const` pointer with auto-dereference: always initialized to an l-value
+	* Consider:
+{{{cpp
+Node n {1, new Node {2, nullptr}};
+
+Node m = n; // Copy constructor
+Node m2;
+m2 = n; // Copy assignment operator
+
+Node plusOne(Node n) {
+	for (Node *p = &n; p; p = p->next) {
+		++p.data;
+	}
+	return n;
+}
+
+Node m3 = plusOne(n);
+// What function is called?
+}}}
+		* If the definition of `m3` invokes the copy constructor (it does), what is `other`?
+			* `other` is an l-value reference, but what is the address of the object it points to?
+				* The compiler creates a temporary object to hold the result of `plusOne(n)`
+				* `other` is a reference to this temporary object, and the copy constructor deep-copies from the temporary object
+					* However, the temporary object is going to be discarded anyway, as soon as `Node m3  = plusOne(n);`
+					* It is wasteful to have to copy from the temporary object; we can just steal from it without copying
+					* We need to know if the parameter is a temporary object or a standalone object
+		* In C++, an *r-value reference* of type `Node&&` is a reference to a temporary object (an r-value) of type `Node`
+		* We can write a constructor that takes a `Node&&`:
+{{{cpp
+struct Node {
+	...
+	Node(Node&& other):data {other.data};
+		next {other.next} {
+			other.next = nullptr; 
+			// Prevents data we stole from being deleted
+			//	when other is deleted
+		}
+}}}
+			* Similarly:
+{{{cpp
+Node m;
+m = plusOne(n); // Assignment from a temp
+}}}
+			* To avoid copying from the temporary object whose data is about to be deleted, we write a *move assignment operator*:
+{{{cpp
+	...
+	Node &operator=(Node&& other) {
+		// Steal other's data, other destroys my old data
+		using std::swap;
+		swap(data, other.data);
+		swap(next, other.next);
+		return *this; // Other goes out of scope, deletes our data
+	}
+}}}
+			* The compiler will decide when to use the copy or move assignment operator based on whether the parameter is temporary
+			* Note:
+				* If you don't define a move constructor/assignment operator, the copy versions are used
+				* If the move constructor/move assignment operator is defined, it will replace all calls to the copy constructor/copy assignment operator when the argument is a temporary r-value. The compiler takes care of this.

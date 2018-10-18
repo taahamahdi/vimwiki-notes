@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>invariants+encapsulation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Invariants and Encapsulation"><h1 id="Invariants and Encapsulation">Invariants and Encapsulation</h1></div>
+
+<p>
+Consider:
+</p>
+<pre cpp>
+struct Node {
+	int data;
+	Node *next;
+	~Node() { delete next; }
+};
+
+Node n1 { 1, new Node {2, nullptr} };
+Node n2 { 3, nullptr };
+Node n3 { 4, &amp;n2 };
+</pre>
+<ul>
+<li>
+What happens when these go out of scope?
+
+<ul>
+<li>
+<code>n1</code>: The destructor runs without any issues, entire list is deleted. <span id="Invariants and Encapsulation-OK"></span><strong id="OK">OK</strong>.
+
+<li>
+<code>n3</code>: The destructor tries to delete the address of <code>n2</code>, but <code>n2</code> <span id="Invariants and Encapsulation-is on the stack"></span><strong id="is on the stack">is on the stack</strong>, not the heap. <span id="Invariants and Encapsulation-Undefined behavior"></span><strong id="Undefined behavior">Undefined behavior</strong>.
+
+</ul>
+<li>
+<code>Node</code> relies on an assumption for its proper operation -- that <code>next</code> is either <code>nullptr</code> or was allocated by <code>new</code>
+
+<ul>
+<li>
+This is an <span id="Invariants and Encapsulation-invariant"></span><strong id="invariant">invariant</strong> -- a statement that must hold true -- that <code>Node</code> relies on
+
+<ul>
+<li>
+But we can't guarantee this is invariant -- can't trust the user to use <code>Node</code> properly
+
+<li>
+<span id="Invariants and Encapsulation-Example"></span><strong id="Example">Example</strong>: Consider a stack
+
+<ul>
+<li>
+The invariant is the last item pushed is the first item popped
+
+<ul>
+<li>
+But not if the client can rearrange the underlying data
+
+</ul>
+<li>
+Hard to reason about programs if you can't rely on invariants
+
+</ul>
+</ul>
+</ul>
+<li>
+To enforce variants, we use <span id="Invariants and Encapsulation-encapsulation"></span><strong id="encapsulation">encapsulation</strong>
+
+<ul>
+<li>
+Treat objects as black boxes -- capsules 
+
+<ul>
+<li>
+Seal away implementation
+
+<li>
+Only interact via provided methods
+
+<ul>
+<li>
+We get abstraction
+
+</ul>
+</ul>
+<li>
+Regain control of the program
+
+<ul>
+<li>
+<span id="Invariants and Encapsulation-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+struct Vec {
+	Vec (int x, int y);
+  private:
+	int x, y;
+  public:
+	Vec operator+(const Vec &amp;other);
+	.
+	.
+	.
+};
+</pre>
+
+<ul>
+<li>
+Items inside <code>private</code> can't be accessed outside of <code>struct Vec</code>
+
+<li>
+Anyone can see what's in <code>public</code>
+
+<li>
+By default, visibility is <code>public</code> -- keep backwards-compatibility with C programs
+
+</ul>
+<li>
+In general, we want <code>private</code> fields; only methods should be <code>public</code>
+
+<li>
+It would be better to have default visibility to <code>private</code> to protect data and abstraction layer
+
+<ul>
+<li>
+We switch from <code>struct</code> to <code>class</code> -- the only difference is default visibility
+
+<ul>
+<li>
+<code>public</code> in <code>struct</code>
+
+<li>
+<code>private</code> in <code>class</code>
+<pre cpp>
+class Vec {
+	int x, y;
+  public:
+	Vec(int x, int y);
+	Vec operator+(const Vec &amp;other);
+};
+</pre>
+<pre cpp>
+// list.h
+
+class List {
+	struct Node; // private nested class -- only accessible inside class List
+	Node *theList = nullptr;
+  public:
+
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+</pre>
+
+</body>
+</html>

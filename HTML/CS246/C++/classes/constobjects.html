@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>constobjects</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="`Const` Objects"><h1 id="`Const` Objects"><code>Const</code> Objects</h1></div>
+
+<pre cpp>
+int f(const Node &amp;n) {...}
+</pre>
+<ul>
+<li>
+<code>const</code> objects arise often, especially as parameters
+
+<li>
+What is a <code>const</code> object?
+
+<ul>
+<li>
+Can't change the fields
+
+</ul>
+<li>
+Can we call methods on a <code>const</code> object?
+
+<ul>
+<li>
+<span id="<code>Const</code> Objects-Issue"></span><strong id="Issue">Issue</strong>: The method might modify fields, violating <code>const</code>
+
+<li>
+<span id="<code>Const</code> Objects-Yes"></span><strong id="Yes">Yes</strong>, we can call methods that promise not to modify fields
+
+<ul>
+<li>
+<span id="<code>Const</code> Objects-Example"></span><strong id="Example">Example</strong>: 
+<pre cpp>
+struct Student {
+	int assns, mt, final;
+	float grade() const;
+	// Adding const to the end means it doesn't modify fields
+};
+</pre>
+
+<ul>
+<li>
+The compiler checks that <code>const</code> methods don't modify fields
+
+<li>
+Only <code>const</code> methods can be called on <code>const</code> objects
+
+<li>
+Now consider: we cant to collect usage statistics on <code>Student</code> obejcts
+<pre cpp>
+struct Student {
+	...
+	int numCalls = 0;
+	float grade() const {
+		numCalls++;
+		return ...;
+	}
+};
+</pre>
+
+<ul>
+<li>
+Can't call <code>grade()</code> on <code>const Student</code>s anymore
+
+<ul>
+<li>
+Mutating <code>numCalls</code> affects only the <span id="<code>Const</code> Objects-physical constness"></span><strong id="physical constness">physical constness</strong> of <code>Student</code> objects, not the <span id="<code>Const</code> Objects-logical constness"></span><strong id="logical constness">logical constness</strong>
+
+<ul>
+<li>
+Physical constness -- affect on the object itself
+
+<li>
+Logical constness -- affect on the actual <code>Student</code> part (what the real world cares about)
+
+</ul>
+<li>
+Want to be able to update <code>numCalls</code>, even if the object is <code>const</code>
+
+<ul>
+<li>
+Declare the field <span id="<code>Const</code> Objects-mutable"></span><strong id="mutable">mutable</strong> -- can be changed even if the object is <code>const</code>
+<pre cpp>
+struct Student {
+	...
+	mutable int numCalls = 0;
+	float grade() const {
+		numCalls++;
+		return ...;
+	}
+};
+</pre>
+
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

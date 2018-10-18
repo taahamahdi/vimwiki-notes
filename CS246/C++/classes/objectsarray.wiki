@@ -1,0 +1,28 @@
+= Arrays of Objects =
+
+{{{cpp
+struct Vec {
+	int x, y;
+	Vec(int x, int y): x{x}, y{y} {}
+};
+
+Vec *vp = new Vec[10];
+Vec moreVecs[10];
+// DOES NOT COMPILE
+}}}
+* `vp` and `moreVecs` want to call the default constructor on each item
+* If there is no default constructor, can't initialize the items
+* Options:
+	1. Provide a default constructor -- only if it makes sense to initialize with a default value
+	2. If object is on the stack, `Vec moreVecs[3] = { {0,0}, {1,1}, {2,4} };`
+		* Heap arrays of known size: `vec *vp = new Vec[3] { {0,0}, {1,1}, {2,4} };`
+	3. Heap arrays of dynamic size: create an array of pointers
+{{{cpp
+Vec **vp = new Vec*[5];
+vp[0] = new Vec {0,0};
+vp[1] = new Vec {1,1};
+...
+for (int i = 0; i < 5; i++) delete vp[i];
+
+delete []vp;
+}}}

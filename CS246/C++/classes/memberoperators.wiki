@@ -1,0 +1,44 @@
+= Member Operators =
+* In the previous discussion, we had `operator=` as a member function and not a standalone function
+* When an operator is a member function, this plays the role of the left-hand-side argument
+{{{cpp
+struct Vec {
+	int x, y;
+	...
+	Vec operator+(const Vec& rhs) {
+		return {x + rhs.x, y + rhs.y};
+	}
+	
+	Vec operator*(const int k) {
+		return {x * k, y * k};
+	}
+};
+}}}
+	* *Note*: `operator*`, `v * k` (`vec * int`) implements vector-scalar multiplication. What if I want `k * v`?
+		* It cannot be a member function, because the first argument is an `int`, not a `Vec`. Thus, it must be standalone:
+{{{cpp
+	...
+	Vec operator*(const int k, const Vec& v) {
+		return v * k;
+	}
+};
+}}}
+* I/O operators:
+{{{cpp
+struct Vec {
+	...
+	ostream &operator<<(ostream &out) {
+		return out << x << ' ' << y;
+	}
+};
+}}}
+	* What's wrong with this?
+		* Makes `Vec` the first operand, not the second
+			* Implies usage as `v << out;` -- *Confusing*
+		* So define operator `<<`, `>>`, as non-members
+* Certain operators *must* be members:
+	* `operator=`
+	* `operator[]`
+	* `operator->`
+	* `operator()`
+	* `operator T`, where `T` is a type

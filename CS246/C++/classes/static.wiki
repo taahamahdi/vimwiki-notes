@@ -1,0 +1,37 @@
+= Static Fields and Methods =
+
+* `numCalls` tracked the number of times a method was called on a *particular* object
+* What if we want to track the number of times a method is called over *all* `Student`s? What about tracking how many `Student`s are created?
+	* We use `static` members -- associated with the class itself, not with any particular object
+		* `static` members are like global variables scoped within a given class
+{{{cpp
+struct Student {
+	...
+	static int numStudents;
+	Student(...): ... {
+		numStudents++;
+	}
+};
+}}}
+{{{cpp
+int Student::numStudents = 0; // Mandatory, goes in .cc file
+}}}
+			* `static` fields must be defined external to the class
+* Member functions can also be `static` -- don't depend on a specific instance(no `this` parameter)
+	* However, you can only access `static` fields and only call other `static` member functions
+{{{cpp
+struct Student {
+	...
+	static int numStudents;
+	static void howMany() {
+		cout << numStudents;
+	}
+};
+}}}
+{{{cpp
+// Client code
+Student billy {60, 70, 80},
+		jane {70, 80, 90};
+Student::howMany(); // Prints 2
+// Replace "this" with "Student::"
+}}}

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>elision</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Copy/Move Elision"><h1 id="Copy/Move Elision">Copy/Move Elision</h1></div>
+
+<pre cpp>
+Vec makeVec { return {0, 0}; }
+Vec v = makeVec(); // What runs here?
+</pre>
+<ul>
+<li>
+In <code>g++</code>, just a basic constructor would be called -- not a move or copy constructor
+
+<li>
+In some circumstances, C++ is allowed to (but doesn't have to) skip calling copy/move constructors
+
+<ul>
+<li>
+In this example, <code>makeVec</code> writes the result directly into the space occupied by <code>v</code> in the caller, rather than creating the object in its own stack-frame and then copying it
+
+</ul>
+<li>
+Another example:
+<pre cpp>
+void doSomething(Vec v) { // Pass-by-value calls move/copy constructor
+	...
+}
+doSomething(makeVec()); 
+// Normally calls move constructor to construct v in doSomething
+</pre>
+
+<ul>
+<li>
+Under copy elision, the result of <code>makeVec()</code> would be written directly into the parameter of <code>doSomething</code>, saving a move
+
+<li>
+Copy elision is allowed, even if dropping the constructor call would change the behavior of the program (e.g. the constructor prints something)
+
+<ul>
+<li>
+Not expected to know when copy elision occurs, are expected to know it's possible
+
+</ul>
+<li>
+To build without any copy elision: <code>g++14 -fno-elide-constructors</code>, but can slow down your program considerably
+
+<li>
+In summary, we have the Rule of 5:
+
+<ul>
+<li>
+If you need a custom version of any of these, you usually need a custom version of all five:
+
+<ol>
+<li>
+Copy constructor
+
+<li>
+Copy assignment operator
+
+<li>
+Destructor
+
+<li>
+Move constructor
+
+<li>
+Move assignment operator
+
+</ol>
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+= Copy Assignment Operator =
+
+{{{cpp
+Student billy{70, 80, 90};
+Student jane = billy; // Copy constructor
+
+Student joey; // Default constructor
+joey = billy; // Copy, but not a construction (joey was already constructed, thus assigned from billy) -- copy assignment operator
+}}}
+
+* Copy assignment operator uses built-in implementation
+* May need to write your own (such as to prevent a shallow copy with `Node`)
+{{{cpp
+struct Node {
+	...
+	Node &operator=(const Node &other) {
+	// Return the item assigned so cascading assignment works (x = y = z = 3)
+	// No need for MIL because all fields have been constructed already -- MIL only applies to constructors
+		data = other.data;
+		delete next; // Prevent memory leak
+		next = other.next ? new Node {*other.next} : nullptr;
+		return *this;
+	} // **WRONG AND DANGEROUS**
+};
+}}}
+	* This implementation is *WRONG AND DANGEROUS*
+		* Why?
+			* `Node n{1, new Node{2, new Node{3, nullptr}}};`
+			* `n = n;` -- deletes `n` and then tries to copy `n` to `n`, leading to undefined behavior
+			* This isn't just one case:
+				* If `*p = *q;`, where both point to the same item, self-assignment occurs
+				* `a[i] = a[j];` where `i = j`, `n = m;` and `m` is a reference to `n`, etc.
+			* *When writing* `operator=`, *ALWAYS watch out for self-assignment*
+{{{cpp
+struct Node {
+	...
+	Node &operator=(const node &other) {
+		if (this == &other) return *this; // Prevent self-assigment errors
+		// The rest is the same
+		data = other.data;
+		delete next; // Prevent memory leak
+		next = other.next ? new Node {*other.next} : nullptr;
+		// If new fails, the fuction quits immediately
+		// Assignment to next won't happen
+		// next was deleted, dangling pointer -- corrupted data structure
+		return *this;
+	}
+};
+}}}
+			* Would be better to create the copy first, then delete
+{{{cpp
+	...
+	Node &operator=(const node &other) {
+		if (this == &other) return *this;
+		Node *tmp = next;
+		next = other.next ? new Node {*other.next} : nullptr; // Copy constructor
+		data = other.data;
+		delete tmp; // Destructor
+		return *this; // If new fails, Node has old data
+	}
+}}}
+			* We can employ the copy-and-swap idiom to achieve the advantages of this version more concisely
+{{{cpp
+#include <utility>
+struct Node {
+	...
+	void swap(Node &other) {
+		using std::swap; // I mean std::swap if I say swap
+		swap(data, other.data);
+		swap(next, other.next);
+	}
+	
+	Node &operator=(const Node& other) {
+		Node tmp = other; // Copy constructor
+		swap(tmp);
+		return *this; // tmp deleted by going out of scope
+	}
+};
+}}}

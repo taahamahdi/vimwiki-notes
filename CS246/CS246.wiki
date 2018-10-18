@@ -15,4 +15,12 @@
 	* [[C++/operatoroverloading|Operator Overloading]]
 	* [[C++/preprocessor|The Preprocessor]]
 	* [[C++/separatecompilation|Separate Compilation]]
-	* [[C++/classes|Classes]]
+	* Classes
+		* [[C++/classes/introclasses|Introduction to Classes: Initialization and Destruction]]
+		* [[C++/classes/copyassignmentoperator|Copy Assignment Operator]]
+		* [[C++/classes/rvalues|R-values and R-value References]]
+		* [[C++/classes/elision|Copy/Move Elision]]
+		* [[C++/classes/memberoperators|Member Operators]]
+		* [[C++/classes/objectsarray|Arrays of Objects]]
+		* [[C++/classes/constobjects|Const Objects]]
+		* [[C++/classes/static|Static Fields and Methods]]

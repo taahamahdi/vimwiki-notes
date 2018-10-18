@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>objectsarray</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Arrays of Objects"><h1 id="Arrays of Objects">Arrays of Objects</h1></div>
+
+<pre cpp>
+struct Vec {
+	int x, y;
+	Vec(int x, int y): x{x}, y{y} {}
+};
+
+Vec *vp = new Vec[10];
+Vec moreVecs[10];
+// DOES NOT COMPILE
+</pre>
+<ul>
+<li>
+<code>vp</code> and <code>moreVecs</code> want to call the default constructor on each item
+
+<li>
+If there is no default constructor, can't initialize the items
+
+<li>
+Options:
+
+<ol>
+<li>
+Provide a default constructor -- only if it makes sense to initialize with a default value
+
+<li>
+If object is on the stack, <code>Vec moreVecs[3] = { {0,0}, {1,1}, {2,4} };</code>
+
+<ul>
+<li>
+Heap arrays of known size: <code>vec *vp = new Vec[3] { {0,0}, {1,1}, {2,4} };</code>
+
+</ul>
+<li>
+Heap arrays of dynamic size: create an array of pointers
+<pre cpp>
+Vec **vp = new Vec*[5];
+vp[0] = new Vec {0,0};
+vp[1] = new Vec {1,1};
+...
+for (int i = 0; i &lt; 5; i++) delete vp[i];
+
+delete []vp;
+</pre>
+
+</ol>
+</ul>
+
+</body>
+</html>

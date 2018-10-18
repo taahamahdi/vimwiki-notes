@@ -1,0 +1,28 @@
+= Copy/Move Elision =
+
+{{{cpp
+Vec makeVec { return {0, 0}; }
+Vec v = makeVec(); // What runs here?
+}}}
+* In `g++`, just a basic constructor would be called -- not a move or copy constructor
+* In some circumstances, C++ is allowed to (but doesn't have to) skip calling copy/move constructors
+	* In this example, `makeVec` writes the result directly into the space occupied by `v` in the caller, rather than creating the object in its own stack-frame and then copying it
+* Another example:
+{{{cpp
+void doSomething(Vec v) { // Pass-by-value calls move/copy constructor
+	...
+}
+doSomething(makeVec()); 
+// Normally calls move constructor to construct v in doSomething
+}}}
+	* Under copy elision, the result of `makeVec()` would be written directly into the parameter of `doSomething`, saving a move
+	* Copy elision is allowed, even if dropping the constructor call would change the behavior of the program (e.g. the constructor prints something)
+		* Not expected to know when copy elision occurs, are expected to know it's possible
+	* To build without any copy elision: `g++14 -fno-elide-constructors`, but can slow down your program considerably
+	* In summary, we have the Rule of 5:
+		* If you need a custom version of any of these, you usually need a custom version of all five:
+			1. Copy constructor
+			2. Copy assignment operator
+			3. Destructor
+			4. Move constructor
+			5. Move assignment operator

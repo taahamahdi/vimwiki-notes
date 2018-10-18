@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>static</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Static Fields and Methods"><h1 id="Static Fields and Methods">Static Fields and Methods</h1></div>
+
+<ul>
+<li>
+<code>numCalls</code> tracked the number of times a method was called on a <span id="Static Fields and Methods-particular"></span><strong id="particular">particular</strong> object
+
+<li>
+What if we want to track the number of times a method is called over <span id="Static Fields and Methods-all"></span><strong id="all">all</strong> <code>Student</code>s? What about tracking how many <code>Student</code>s are created?
+
+<ul>
+<li>
+We use <code>static</code> members -- associated with the class itself, not with any particular object
+
+<ul>
+<li>
+<code>static</code> members are like global variables scoped within a given class
+<pre cpp>
+struct Student {
+	...
+	static int numStudents;
+	Student(...): ... {
+		numStudents++;
+	}
+};
+</pre>
+<pre cpp>
+int Student::numStudents = 0; // Mandatory, goes in .cc file
+</pre>
+
+<ul>
+<li>
+<code>static</code> fields must be defined external to the class
+
+</ul>
+</ul>
+</ul>
+<li>
+Member functions can also be <code>static</code> -- don't depend on a specific instance(no <code>this</code> parameter)
+
+<ul>
+<li>
+However, you can only access <code>static</code> fields and only call other <code>static</code> member functions
+<pre cpp>
+struct Student {
+	...
+	static int numStudents;
+	static void howMany() {
+		cout &lt;&lt; numStudents;
+	}
+};
+</pre>
+<pre cpp>
+// Client code
+Student billy {60, 70, 80},
+		jane {70, 80, 90};
+Student::howMany(); // Prints 2
+// Replace "this" with "Student::"
+</pre>
+
+</ul>
+</ul>
+
+</body>
+</html>

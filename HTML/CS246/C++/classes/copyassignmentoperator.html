@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>copyassignmentoperator</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Copy Assignment Operator"><h1 id="Copy Assignment Operator">Copy Assignment Operator</h1></div>
+
+<pre cpp>
+Student billy{70, 80, 90};
+Student jane = billy; // Copy constructor
+
+Student joey; // Default constructor
+joey = billy; // Copy, but not a construction (joey was already constructed, thus assigned from billy) -- copy assignment operator
+</pre>
+
+<ul>
+<li>
+Copy assignment operator uses built-in implementation
+
+<li>
+May need to write your own (such as to prevent a shallow copy with <code>Node</code>)
+<pre cpp>
+struct Node {
+	...
+	Node &amp;operator=(const Node &amp;other) {
+	// Return the item assigned so cascading assignment works (x = y = z = 3)
+	// No need for MIL because all fields have been constructed already -- MIL only applies to constructors
+		data = other.data;
+		delete next; // Prevent memory leak
+		next = other.next ? new Node {*other.next} : nullptr;
+		return *this;
+	} // **WRONG AND DANGEROUS**
+};
+</pre>
+
+<ul>
+<li>
+This implementation is <span id="Copy Assignment Operator-WRONG AND DANGEROUS"></span><strong id="WRONG AND DANGEROUS">WRONG AND DANGEROUS</strong>
+
+<ul>
+<li>
+Why?
+
+<ul>
+<li>
+<code>Node n{1, new Node{2, new Node{3, nullptr}}};</code>
+
+<li>
+<code>n = n;</code> -- deletes <code>n</code> and then tries to copy <code>n</code> to <code>n</code>, leading to undefined behavior
+
+<li>
+This isn't just one case:
+
+<ul>
+<li>
+If <code>*p = *q;</code>, where both point to the same item, self-assignment occurs
+
+<li>
+<code>a[i] = a[j];</code> where <code>i = j</code>, <code>n = m;</code> and <code>m</code> is a reference to <code>n</code>, etc.
+
+</ul>
+<li>
+<span id="Copy Assignment Operator-When writing"></span><strong id="When writing">When writing</strong> <code>operator=</code>, <span id="Copy Assignment Operator-ALWAYS watch out for self-assignment"></span><strong id="ALWAYS watch out for self-assignment">ALWAYS watch out for self-assignment</strong>
+<pre cpp>
+struct Node {
+	...
+	Node &amp;operator=(const node &amp;other) {
+		if (this == &amp;other) return *this; // Prevent self-assigment errors
+		// The rest is the same
+		data = other.data;
+		delete next; // Prevent memory leak
+		next = other.next ? new Node {*other.next} : nullptr;
+		// If new fails, the fuction quits immediately
+		// Assignment to next won't happen
+		// next was deleted, dangling pointer -- corrupted data structure
+		return *this;
+	}
+};
+</pre>
+
+<li>
+Would be better to create the copy first, then delete
+<pre cpp>
+	...
+	Node &amp;operator=(const node &amp;other) {
+		if (this == &amp;other) return *this;
+		Node *tmp = next;
+		next = other.next ? new Node {*other.next} : nullptr; // Copy constructor
+		data = other.data;
+		delete tmp; // Destructor
+		return *this; // If new fails, Node has old data
+	}
+</pre>
+
+<li>
+We can employ the copy-and-swap idiom to achieve the advantages of this version more concisely
+<pre cpp>
+#include &lt;utility&gt;
+struct Node {
+	...
+	void swap(Node &amp;other) {
+		using std::swap; // I mean std::swap if I say swap
+		swap(data, other.data);
+		swap(next, other.next);
+	}
+	
+	Node &amp;operator=(const Node&amp; other) {
+		Node tmp = other; // Copy constructor
+		swap(tmp);
+		return *this; // tmp deleted by going out of scope
+	}
+};
+</pre>
+
+</ul>
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

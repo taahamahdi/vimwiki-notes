@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>memberoperators</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Member Operators"><h1 id="Member Operators">Member Operators</h1></div>
+<ul>
+<li>
+In the previous discussion, we had <code>operator=</code> as a member function and not a standalone function
+
+<li>
+When an operator is a member function, this plays the role of the left-hand-side argument
+<pre cpp>
+struct Vec {
+	int x, y;
+	...
+	Vec operator+(const Vec&amp; rhs) {
+		return {x + rhs.x, y + rhs.y};
+	}
+	
+	Vec operator*(const int k) {
+		return {x * k, y * k};
+	}
+};
+</pre>
+
+<ul>
+<li>
+<span id="Member Operators-Note"></span><strong id="Note">Note</strong>: <code>operator*</code>, <code>v * k</code> (<code>vec * int</code>) implements vector-scalar multiplication. What if I want <code>k * v</code>?
+
+<ul>
+<li>
+It cannot be a member function, because the first argument is an <code>int</code>, not a <code>Vec</code>. Thus, it must be standalone:
+<pre cpp>
+	...
+	Vec operator*(const int k, const Vec&amp; v) {
+		return v * k;
+	}
+};
+</pre>
+
+</ul>
+</ul>
+<li>
+I/O operators:
+<pre cpp>
+struct Vec {
+	...
+	ostream &amp;operator&lt;&lt;(ostream &amp;out) {
+		return out &lt;&lt; x &lt;&lt; ' ' &lt;&lt; y;
+	}
+};
+</pre>
+
+<ul>
+<li>
+What's wrong with this?
+
+<ul>
+<li>
+Makes <code>Vec</code> the first operand, not the second
+
+<ul>
+<li>
+Implies usage as <code>v &lt;&lt; out;</code> -- <span id="Member Operators-Confusing"></span><strong id="Confusing">Confusing</strong>
+
+</ul>
+<li>
+So define operator <code>&lt;&lt;</code>, <code>&gt;&gt;</code>, as non-members
+
+</ul>
+</ul>
+<li>
+Certain operators <span id="Member Operators-must"></span><strong id="must">must</strong> be members:
+
+<ul>
+<li>
+<code>operator=</code>
+
+<li>
+<code>operator[]</code>
+
+<li>
+<code>operator-&gt;</code>
+
+<li>
+<code>operator()</code>
+
+<li>
+<code>operator T</code>, where <code>T</code> is a type
+
+</ul>
+</ul>
+
+</body>
+</html>

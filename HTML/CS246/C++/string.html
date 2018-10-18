@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>string</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Strings"><h1 id="Strings">Strings</h1></div>
+
+<ul>
+<li>
+In C, strings were arrays of characters (<code>char*</code> or <code>char[]</code>) terminated with <code>\0</code>
+
+<ul>
+<li>
+Must explicitly manage memory - allocate more memory as strings get larger
+
+<li>
+Easy to overwrite the null terminator and corrupt memory
+
+</ul>
+</ul>
+
+<ul>
+<li>
+C++ strings - <code>include &lt;string&gt;</code>, type is <code>std::string</code>
+
+<ul>
+<li>
+Strings in C++ grow as needed (no need to manage memory)
+
+<li>
+Much safer to manipulate
+
+</ul>
+</ul>
+
+<ul>
+<li>
+<span id="Strings-Example"></span><strong id="Example">Example</strong>: <code>string s = "hello";</code>
+
+<ul>
+<li>
+<code>"hello"</code> is still a C-style character array (including <code>\0</code>)
+
+<li>
+<code>s</code> is a C++ string created from the C string on initialization
+
+</ul>
+</ul>
+
+<div id="Strings-String operations"><h2 id="String operations">String operations</h2></div>
+
+<ul>
+<li>
+Equality/inequality:
+
+<ul>
+<li>
+<code>s1 == s2</code>, <code>s1 != s2</code> is legal (unlike C, where <code>strcmp</code> is necessary)
+
+</ul>
+<li>
+Comparison:
+
+<ul>
+<li>
+<code>s1 &lt;= s2</code> (lexicographic comparison)
+
+</ul>
+<li>
+Length:
+
+<ul>
+<li>
+<code>s.length()</code>
+
+<li>
+<code>O(1)</code> operation, <span id="Strings-String operations-can"></span><strong id="can">can</strong> be used as a loop condition
+
+<li>
+In C, length is an <code>O(n)</code> operation
+
+</ul>
+<li>
+Get individual characters:
+
+<ul>
+<li>
+<code>s[0]</code>, <code>s[1]</code>, etc.
+
+<li>
+Mimics C
+
+</ul>
+<li>
+String concatenation:
+
+<ul>
+<li>
+<code>s3 = s1 + s2</code>
+
+<li>
+Completes concatenation, takes care of all memory management
+
+<li>
+<code>s3 += s4</code> works too
+
+</ul>
+</ul>
+
+<pre cpp>
+int main() {
+	string s;
+	cin &gt;&gt; s; // Skips leading whitespace, stops at whitespace (reads one word)
+	cout &lt;&lt; s &lt;&lt; endl;
+}
+</pre>
+<ul>
+<li>
+What if we want the whitespace?
+
+<ul>
+<li>
+<code>getline(cin, s)</code> reads from current position to next newline into <code>s</code>
+
+</ul>
+</ul>
+
+<ul>
+<li>
+Stream abstraction applies to other sources of data:
+
+<ul>
+<li>
+Files - read from a file instead of <code>stdin</code>
+
+<ul>
+<li>
+<code>std::ifstream</code> - read from a file
+
+<li>
+<code>std::ofstream</code> - write to a file
+
+</ul>
+</ul>
+</ul>
+
+<ul>
+<li>
+<span id="Strings-String operations-Example"></span><strong id="Example">Example</strong>: File access in C:
+<pre c>
+#include &lt;stdio.h&gt;
+
+int main() {
+	char s[256];
+	FILE *f = fopen("file.txt", "r");
+	while (true) {
+		fscanf(f, "%255s", s);
+		if (feof(f)) break; // fscanf, feof are file scanf, file eof
+		printf("%s\n", s);
+	}
+	fclose(f);
+}
+</pre>
+
+<li>
+<span id="Strings-String operations-Example"></span><strong id="Example">Example</strong>: File access in C++:
+<pre cpp>
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include &lt;string&gt;
+using namespace std;
+
+int main() {
+	ifstream f{"file.txt"}; // Declaring and initializing an ifstream opens the file
+	string s;
+	while (f &gt;&gt; s) {
+		cout &lt;&lt; s &lt;&lt; endl;
+	}
+} // File is closed when ifstream (f) goes out of scope
+</pre>
+
+<ul>
+<li>
+Anything you can do with <code>cin</code> / <code>cout</code>, you can do with an <code>ifstream</code> / <code>ofstream</code>
+
+</ul>
+</ul>
+<li>
+Strings - attach a stream to a string and use it to read from/write to the string
+
+<ul>
+<li>
+<code>#include &lt;sstream&gt;</code>
+
+<ul>
+<li>
+<code>std::istringstream</code> - read from a string
+
+<li>
+<code>std::ostringstream</code> - write to a string
+
+</ul>
+<li>
+<span id="Strings-String operations-Example"></span><strong id="Example">Example</strong>: Convert a number to a string
+<pre cpp>
+string intToString(int n) {
+	ostringstream sock;
+	sock &lt;&lt; n;
+	return sock.str();
+}
+</pre>
+
+<li>
+<span id="Strings-String operations-Example"></span><strong id="Example">Example</strong>: Convert a string to a number
+<pre cpp>
+// getNum.cc
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;sstream&gt;
+using namespace std;
+
+int main() {
+	int n;
+	while (true) {
+		cout &lt;&lt; "Enter a number:" &lt;&lt; end;
+		string s;
+		cin	&gt;&gt; s;
+		istringstream sock {s};
+		if (sock &gt;&gt; n) break;
+		cout &lt;&lt; "I said,";
+	}
+	cout &lt;&lt; "You entered" &lt;&lt; n &lt;&lt; endl;
+}
+</pre>
+<pre cpp>
+// readIntsSS.cc
+#include &lt;iostream&gt;
+#include &lt;sstream&gt;
+using namespace std;
+
+int main() {
+	string s;
+	while (cin &gt;&gt; s) {
+		istringstream ss{s};
+		int n;
+		if (ss &gt;&gt; n) cout &lt;&lt; n &lt;&lt; endl;
+	}
+}
+</pre>
+
+</ul>
+
+</body>
+</html>

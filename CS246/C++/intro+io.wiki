@@ -1,0 +1,142 @@
+= Intro to C++ =
+
+* Hello world in C:
+{{{c
+#include <stdio.h>
+int main() {
+	printf("Hello world\n");
+}
+}}}
+* Hello world in C++:
+{{{cpp
+#include <iostream>
+using namespace std;
+int main() {
+	cout << "Hello world" << endl;
+}
+}}}
+* Notes:
+	* `void main(){ ... }` is illegal in C++
+	* Implicit `return 0;` if not specified (`echo $?`)
+	* C version is still legal in C++
+	* Preferred C++ I/O:
+		* Header: `<iostream>`
+		* `std::cout << ___ << ___ << ___ ...;` - output
+		* `std::endl` - end of line
+		* `using namespace std;` - allows omitting `std::` prefix
+	* Compiling C++ programs:
+		* `g++ -std=c++14 -Wall program.cc -o program`
+			* `-o program` - allows specifying name of executable
+				* If omitted, titled `a.out`
+		* Using alias from A0, `g++14 program.cc -o program`
+		* `-Wall` - show all warnings from compiler
+
+== Input/Output ==
+	* 3 I/O Streams
+		* `cout` / `cerr` - for printing `stdout` / `stderr`
+		* `cin` - for reading `stdin`
+	* 2 I/O Operators
+		* `<<` - "put to" (output)
+		* `>>` - "get from" (input)
+		* Operator points in the direction of information flow
+			* `cerr << x`
+			* `cin >> x`
+	* *Example*: Add two numbers
+{{{cpp
+// plus.cc
+#include <iostream>
+using namespace std;
+// Note: Two preceding lines will be assumed from now on
+
+int main() {
+	int x, y;
+	cin >> x >> y;
+	cout << x + y << endl;
+}
+}}}
+		* To compile: `g++14 plus.cc -o plus`
+		* `cin` ignores whitespace - spaces/tabs/newlines/etc.
+		* Some questions:
+			1. What if input doesn't contain an integer next?
+			2. What if input integer is too large? Too small?
+			3. What if input is exhausted before we get 2 ints? (Press Ctrl+D to stop input)
+				* Statement fails
+		* If the read failed, `cin.fail()` will be true
+		* If EOF, `cin.eof()` and `cin.fail()` will be true
+			* Not until the attempted read fails!
+	* *Example*: Read all integers and `echo` them, once per line, to `stdout`.
+		* Stop on EOF or bad input
+{{{cpp
+int main() {
+	int i;
+	while(true) {
+		cin >> i;
+		if (cin.fail()) break;
+		cout << i << endl;
+	}
+}
+}}}
+		* Note: There is an implicit conversion from `cin` to `bool`
+			* Allows `cin` to be used as a condition
+		* *Example v2*:
+{{{cpp
+int main() {
+	int i;
+	while (true) {
+		cin >> i;
+		if (!cin) break;
+		cout << i << endl;
+	}
+}
+}}}
+		* Note: `>>` is C's right bitshift operator
+			* `a >> b` shifts `a`'s bits to the right by `b` spots
+			* *Example*:
+				* `21 >> 3`:
+					* 21 = 10101 in binary
+					* `21 >> 3` = 10 in binary (last 3 items are dropped) = 2
+			* However, when the left-hand side is `cin`, `>>` is the "get from" operator
+			* `operator >>`:
+				* Inputs: `cin` (istream), data (several possible types)
+				* Outputs: Returns `cin` back to you (istream)
+					* This is why we can do `cin >> x >> y >> z;` (multiple chained `cin`s)
+		* *Example v3*:
+{{{cpp
+int main() {
+	int i;
+	while (true) {
+		if (!(cin >> i)) break;
+		cout << i << endl;
+	}
+}
+}}}
+		* *Example v4*:
+{{{cpp
+int main() {
+	int i;
+	while (cin >> i) {
+		cout << i << endl;
+	}
+}
+}}}
+		* *Example v5*: Read all `int`s and `echo` to `stdout` until EOF. Skip non-integer input.
+{{{cpp
+int main() {
+	int i;
+	while (true) {
+		if (!(cin >> i)) {
+			if (cin.eof()) break;
+			cin.clear(); // Clears failure flags
+			cin.ignore(); // Skips the next character (the one that failed)
+		}
+		else cout << i << endl; // Read was OK
+	}
+}
+}}}
+	* What if we want to print a number in hexadecimal?
+		* In C, you can print a number in hexadecimal with `%x`
+		* In C++, you use `cout << hex << 95 << endl; // Prints 5f`
+			* `hex` - Example of an *I/O manipulator*
+				* All subsequent integers are printed in hex
+			* Use `cout << dec;` to go back to decimal
+	* Other manipulators - lookup `include <iomanip>`

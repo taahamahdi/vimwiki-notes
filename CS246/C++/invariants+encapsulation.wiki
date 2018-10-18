@@ -1,0 +1,67 @@
+= Invariants and Encapsulation =
+
+Consider:
+{{{cpp
+struct Node {
+	int data;
+	Node *next;
+	~Node() { delete next; }
+};
+
+Node n1 { 1, new Node {2, nullptr} };
+Node n2 { 3, nullptr };
+Node n3 { 4, &n2 };
+}}}
+* What happens when these go out of scope?
+	* `n1`: The destructor runs without any issues, entire list is deleted. *OK*.
+	* `n3`: The destructor tries to delete the address of `n2`, but `n2` *is on the stack*, not the heap. *Undefined behavior*.
+* `Node` relies on an assumption for its proper operation -- that `next` is either `nullptr` or was allocated by `new`
+	* This is an *invariant* -- a statement that must hold true -- that `Node` relies on
+		* But we can't guarantee this is invariant -- can't trust the user to use `Node` properly
+		* *Example*: Consider a stack
+			* The invariant is the last item pushed is the first item popped
+				* But not if the client can rearrange the underlying data
+			* Hard to reason about programs if you can't rely on invariants
+* To enforce variants, we use *encapsulation*
+	* Treat objects as black boxes -- capsules 
+		* Seal away implementation
+		* Only interact via provided methods
+			* We get abstraction
+	* Regain control of the program
+		* *Example*:
+{{{cpp
+struct Vec {
+	Vec (int x, int y);
+  private:
+	int x, y;
+  public:
+	Vec operator+(const Vec &other);
+	.
+	.
+	.
+};
+}}}
+			* Items inside `private` can't be accessed outside of `struct Vec`
+			* Anyone can see what's in `public`
+			* By default, visibility is `public` -- keep backwards-compatibility with C programs
+		* In general, we want `private` fields; only methods should be `public`
+		* It would be better to have default visibility to `private` to protect data and abstraction layer
+			* We switch from `struct` to `class` -- the only difference is default visibility
+				* `public` in `struct`
+				* `private` in `class`
+{{{cpp
+class Vec {
+	int x, y;
+  public:
+	Vec(int x, int y);
+	Vec operator+(const Vec &other);
+};
+}}}
+{{{cpp
+// list.h
+
+class List {
+	struct Node; // private nested class -- only accessible inside class List
+	Node *theList = nullptr;
+  public:
+	

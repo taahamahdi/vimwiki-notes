@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>permissions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Permissions"><h1 id="Permissions">Permissions</h1></div>
+
+<ul>
+<li>
+<code>ls -l</code> - "long form listing"
+
+<li>
+Type
+
+<ul>
+<li>
+<code>-</code> - ordinary file
+
+<li>
+<code>d</code> - directory
+
+</ul>
+<li>
+Groups
+
+<ul>
+<li>
+A user can belong to one or more groups
+
+<li>
+A file can be associated with one group
+
+</ul>
+<li>
+User bits
+
+<ul>
+<li>
+What the owner can do
+
+</ul>
+<li>
+Group bits
+
+<ul>
+<li>
+Apply to members of the file's group (other than the owner)
+
+</ul>
+<li>
+Others bits
+
+<ul>
+<li>
+Apply to everyone else
+
+</ul>
+<li>
+<code>r</code> - Read bit
+
+<li>
+<code>w</code> - Write bit
+
+<li>
+<code>x</code> - Execute bit
+<table>
+<tr>
+<th>
+Bit
+</th>
+<th>
+Meaning for ordinary files
+</th>
+<th>
+Meaning for directories
+</th>
+</tr>
+<tr>
+<td>
+r
+</td>
+<td>
+file contents can be read
+</td>
+<td>
+directory's contents can be read (allowing <code>ls</code>, file globbing, tab completion)
+</td>
+</tr>
+<tr>
+<td>
+w
+</td>
+<td>
+file contents can be modified
+</td>
+<td>
+directory's contents can be modified (adding/removing files)
+</td>
+</tr>
+<tr>
+<td>
+x
+</td>
+<td>
+file can be executed as a program
+</td>
+<td>
+directory can be navigated (<code>cd</code> into the directory)
+</td>
+</tr>
+</table>
+
+<li>
+If the directory's execute bit is not set, there is no access at all, nor to any files/directories within it
+
+<li>
+Changing permissions
+
+<ul>
+<li>
+<code>chmod mode file</code>
+
+<li>
+Give others read permission
+
+<ul>
+<li>
+<code>chmod o+r file</code>
+
+</ul>
+<li>
+Make everyone's permission <code>r-x</code>
+
+<ul>
+<li>
+<code>chmod a=rx</code>
+
+</ul>
+<li>
+Give owner full control
+
+<ul>
+<li>
+<code>chmod u+rwx</code> / <code>chmod u=rwx</code>
+
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

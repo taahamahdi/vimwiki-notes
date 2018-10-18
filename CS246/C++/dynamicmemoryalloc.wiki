@@ -1,0 +1,38 @@
+= Dynamic Memory Allocation =
+* C:
+{{{c
+int *p = malloc( ____ * sizeof(int));
+	...
+free(p);
+}}}
+	* *Do not use them in C++*
+	* Instead, we use `new` / `delete` in C++
+		* Type-aware
+		* Less error prone
+	* *Example*: Create a linked list
+{{{cpp
+struct Node {
+	int data;
+	Node *next;
+};
+
+Node *np = new Node;
+	...
+delete np;
+}}}
+		* Allocated memory resides on the heap
+		* Remains allocated until `delete` is called
+		* If you don't delete all allocated memory, a *memory leak* occurs
+			* Regarded as incorrect by Marmoset since the program will eventually fail -- all submitted programs must not contain any leaks
+
+=== Allocating Arrays on the Heap ===
+
+{{{cpp
+Node *nodeArray = new Node[10];
+	...
+delete [] nodeArray; // Different syntax for deleting an array
+}}}
+
+1. Memory allocated with `new` must be deallocated with `delete`
+2. Memory allocated with with `new [...]` must be deallocated with `delete[]`
+	* Mixing these two is undefined behavior

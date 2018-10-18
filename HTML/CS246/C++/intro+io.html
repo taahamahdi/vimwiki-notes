@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>intro+io</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Intro to C++"><h1 id="Intro to C++">Intro to C++</h1></div>
+
+<ul>
+<li>
+Hello world in C:
+<pre c>
+#include &lt;stdio.h&gt;
+int main() {
+	printf("Hello world\n");
+}
+</pre>
+
+<li>
+Hello world in C++:
+<pre cpp>
+#include &lt;iostream&gt;
+using namespace std;
+int main() {
+	cout &lt;&lt; "Hello world" &lt;&lt; endl;
+}
+</pre>
+
+<li>
+Notes:
+
+<ul>
+<li>
+<code>void main(){ ... }</code> is illegal in C++
+
+<li>
+Implicit <code>return 0;</code> if not specified (<code>echo $?</code>)
+
+<li>
+C version is still legal in C++
+
+<li>
+Preferred C++ I/O:
+
+<ul>
+<li>
+Header: <code>&lt;iostream&gt;</code>
+
+<li>
+<code>std::cout &lt;&lt; ___ &lt;&lt; ___ &lt;&lt; ___ ...;</code> - output
+
+<li>
+<code>std::endl</code> - end of line
+
+<li>
+<code>using namespace std;</code> - allows omitting <code>std::</code> prefix
+
+</ul>
+<li>
+Compiling C++ programs:
+
+<ul>
+<li>
+<code>g++ -std=c++14 -Wall program.cc -o program</code>
+
+<ul>
+<li>
+<code>-o program</code> - allows specifying name of executable
+
+<ul>
+<li>
+If omitted, titled <code>a.out</code>
+
+</ul>
+</ul>
+<li>
+Using alias from A0, <code>g++14 program.cc -o program</code>
+
+<li>
+<code>-Wall</code> - show all warnings from compiler
+
+</ul>
+</ul>
+</ul>
+
+<div id="Intro to C++-Input/Output"><h2 id="Input/Output">Input/Output</h2></div>
+<ul>
+<li>
+3 I/O Streams
+
+<ul>
+<li>
+<code>cout</code> / <code>cerr</code> - for printing <code>stdout</code> / <code>stderr</code>
+
+<li>
+<code>cin</code> - for reading <code>stdin</code>
+
+</ul>
+<li>
+2 I/O Operators
+
+<ul>
+<li>
+<code>&lt;&lt;</code> - "put to" (output)
+
+<li>
+<code>&gt;&gt;</code> - "get from" (input)
+
+<li>
+Operator points in the direction of information flow
+
+<ul>
+<li>
+<code>cerr &lt;&lt; x</code>
+
+<li>
+<code>cin &gt;&gt; x</code>
+
+</ul>
+</ul>
+<li>
+<span id="Intro to C++-Input/Output-Example"></span><strong id="Example">Example</strong>: Add two numbers
+<pre cpp>
+// plus.cc
+#include &lt;iostream&gt;
+using namespace std;
+// Note: Two preceding lines will be assumed from now on
+
+int main() {
+	int x, y;
+	cin &gt;&gt; x &gt;&gt; y;
+	cout &lt;&lt; x + y &lt;&lt; endl;
+}
+</pre>
+
+<ul>
+<li>
+To compile: <code>g++14 plus.cc -o plus</code>
+
+<li>
+<code>cin</code> ignores whitespace - spaces/tabs/newlines/etc.
+
+<li>
+Some questions:
+
+<ol>
+<li>
+What if input doesn't contain an integer next?
+
+<li>
+What if input integer is too large? Too small?
+
+<li>
+What if input is exhausted before we get 2 ints? (Press Ctrl+D to stop input)
+
+<ul>
+<li>
+Statement fails
+
+</ul>
+</ol>
+<li>
+If the read failed, <code>cin.fail()</code> will be true
+
+<li>
+If EOF, <code>cin.eof()</code> and <code>cin.fail()</code> will be true
+
+<ul>
+<li>
+Not until the attempted read fails!
+
+</ul>
+</ul>
+<li>
+<span id="Intro to C++-Input/Output-Example"></span><strong id="Example">Example</strong>: Read all integers and <code>echo</code> them, once per line, to <code>stdout</code>.
+
+<ul>
+<li>
+Stop on EOF or bad input
+<pre cpp>
+int main() {
+	int i;
+	while(true) {
+		cin &gt;&gt; i;
+		if (cin.fail()) break;
+		cout &lt;&lt; i &lt;&lt; endl;
+	}
+}
+</pre>
+
+<li>
+Note: There is an implicit conversion from <code>cin</code> to <code>bool</code>
+
+<ul>
+<li>
+Allows <code>cin</code> to be used as a condition
+
+</ul>
+<li>
+<span id="Intro to C++-Input/Output-Example v2"></span><strong id="Example v2">Example v2</strong>:
+<pre cpp>
+int main() {
+	int i;
+	while (true) {
+		cin &gt;&gt; i;
+		if (!cin) break;
+		cout &lt;&lt; i &lt;&lt; endl;
+	}
+}
+</pre>
+
+<li>
+Note: <code>&gt;&gt;</code> is C's right bitshift operator
+
+<ul>
+<li>
+<code>a &gt;&gt; b</code> shifts <code>a</code>'s bits to the right by <code>b</code> spots
+
+<li>
+<span id="Intro to C++-Input/Output-Example"></span><strong id="Example">Example</strong>:
+
+<ul>
+<li>
+<code>21 &gt;&gt; 3</code>:
+
+<ul>
+<li>
+21 = 10101 in binary
+
+<li>
+<code>21 &gt;&gt; 3</code> = 10 in binary (last 3 items are dropped) = 2
+
+</ul>
+</ul>
+<li>
+However, when the left-hand side is <code>cin</code>, <code>&gt;&gt;</code> is the "get from" operator
+
+<li>
+<code>operator &gt;&gt;</code>:
+
+<ul>
+<li>
+Inputs: <code>cin</code> (istream), data (several possible types)
+
+<li>
+Outputs: Returns <code>cin</code> back to you (istream)
+
+<ul>
+<li>
+This is why we can do <code>cin &gt;&gt; x &gt;&gt; y &gt;&gt; z;</code> (multiple chained <code>cin</code>s)
+
+</ul>
+</ul>
+</ul>
+<li>
+<span id="Intro to C++-Input/Output-Example v3"></span><strong id="Example v3">Example v3</strong>:
+<pre cpp>
+int main() {
+	int i;
+	while (true) {
+		if (!(cin &gt;&gt; i)) break;
+		cout &lt;&lt; i &lt;&lt; endl;
+	}
+}
+</pre>
+
+<li>
+<span id="Intro to C++-Input/Output-Example v4"></span><strong id="Example v4">Example v4</strong>:
+<pre cpp>
+int main() {
+	int i;
+	while (cin &gt;&gt; i) {
+		cout &lt;&lt; i &lt;&lt; endl;
+	}
+}
+</pre>
+
+<li>
+<span id="Intro to C++-Input/Output-Example v5"></span><strong id="Example v5">Example v5</strong>: Read all <code>int</code>s and <code>echo</code> to <code>stdout</code> until EOF. Skip non-integer input.
+<pre cpp>
+int main() {
+	int i;
+	while (true) {
+		if (!(cin &gt;&gt; i)) {
+			if (cin.eof()) break;
+			cin.clear(); // Clears failure flags
+			cin.ignore(); // Skips the next character (the one that failed)
+		}
+		else cout &lt;&lt; i &lt;&lt; endl; // Read was OK
+	}
+}
+</pre>
+
+</ul>
+<li>
+What if we want to print a number in hexadecimal?
+
+<ul>
+<li>
+In C, you can print a number in hexadecimal with <code>%x</code>
+
+<li>
+In C++, you use <code>cout &lt;&lt; hex &lt;&lt; 95 &lt;&lt; endl; // Prints 5f</code>
+
+<ul>
+<li>
+<code>hex</code> - Example of an <span id="Intro to C++-Input/Output-I/O manipulator"></span><strong id="I/O manipulator">I/O manipulator</strong>
+
+<ul>
+<li>
+All subsequent integers are printed in hex
+
+</ul>
+<li>
+Use <code>cout &lt;&lt; dec;</code> to go back to decimal
+
+</ul>
+</ul>
+<li>
+Other manipulators - lookup <code>include &lt;iomanip&gt;</code>
+
+</ul>
+
+</body>
+</html>

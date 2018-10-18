@@ -1,0 +1,144 @@
+= Separate Compilation =
+
+* Split programs into *modules*, which provide an *interface*
+	* Interface - Type defing, prototypes for functions, .h file
+	* Implementation - full definition for all provided functions, .cc file
+	* *Recall*:
+		* Declaration - Only asserts existence
+		* Definition - Full details - allocates space for variables and functions
+	* *Example*:
+		* Interface (vec.h):
+{{{cpp
+struct Vec {
+	int x, y;
+};
+Vec operator+(const vec &v1, const vec &v2);
+extern int globalNum; // declaration
+}}}
+		* (main.cc):
+{{{cpp
+#include "vec.h"
+int main() {
+	Vec v{1, 2};;
+	v = v + v;
+}
+}}}
+		* Implementation (vec.cc):
+{{{cpp
+#include "vec.h" // Don't redefine structure definition -- changing it becomes harder
+Vec operator+(const vec &v1, const vec &v2) {
+	return v{v1.x + v2.x, v1.y + v2.y};
+}
+}}}
+		* *Recall*:
+			* An entity can be declared many times, but defined at most once.
+			* Don't define variables in header files -- they are re-created multiple times, and the compiler gets confused
+				* Add `extern` keyword in header file
+		* Compiling separately:
+			* `g++14 -c vec.cc`, `g++14 -c main.cc`
+				* `-c` - compile only, do not link, do not try to build an executable
+					* Outputs an object file (.o)
+				* Then, you can run `g++14 vec.o main.o -o main` - links object files into an executable, can be run with `./main`
+			* What happens if we change vec.cc?
+				* Only need to recompile vec.cc and relink
+			* What happens if we change vec.h?
+				* Need to recompile *both* vec.cc and main.cc (because they both include vec.h), and then relink
+			* How can we keep track of dependencies and perform minimal recompilation?
+				* Linux tool called `make`
+					* Create a Makefile that says which files depend on which other files
+{{{make
+main: main.o vec.o
+	g++ main.o vec.o -o main
+
+main.o: main.cc vec.h
+	g++ -std=c++14 =c main.cc
+
+vec.o: vec.cc vec.h
+	g++ -std=c++14 -c vec.cc
+	
+.PHONY: clean
+
+clean:
+	rm *.o main
+}}}
+				* Unindented lines are targets
+				* Indentation is mandatory
+					* Indentations must be tabs
+				* Indented lines are recipes for building main from these files
+				* `.PHONY` and `clean:` parts are optional targets for removing all binary files
+				* Then, from the command line: `make`
+					* Builds the whole program
+				* Now, changing just vec.cc and running `make` compiles vec.cc only (not the whole program) and relinks
+				* `make target` - builds the requested target - builds the first target if none are specified
+					* *Example*: Running `make clean` removes all binaries
+				* Must use `g++` instead of `g++14` because `make` will not expand aliases
+			* `make` - builds main
+				* What does main depend on?
+					* Recursively builds dependencies (if necessary)
+					* Then builds main (if necessary)
+						* Bases its decision on last modified date and time to compare which file is older
+							* If a target is older than its dependencies, it is rebuilt
+					* *Example*: If vec.cc changes, it is newer than vec.o
+						* `make` rebuilds vec.o
+							* Now, vec.o is newer than main
+								* `make` also rebuilds main
+				* Generalize a Makefile with variables
+					* `CXX = g++`
+						* Gives compiler's name
+					* `CXXFLAGS = -std=c++14 -Wall -g`
+						* Compiler options
+					* `OBJECTS = main.o vec.o`
+						* Objects for project
+					* `EXEC = main`
+						* Name of executable
+{{{make
+${EXEC}: ${OBJECTS}
+	${CXX} ${CXXFLAGS} ${OBJECTS} -o ${EXEC}
+
+main.o: main.cc vec.h
+
+vec.o: vec.cc vec.h
+
+.PHONY: clean
+
+clean:
+	rm ${EXEC} ${OBJECTS}
+}}}
+					* Can now omit the recipes - `make` guesses that the recipe is `${CXX} ${CXXFLAGS} -c ...`
+					* *Hardest part of writing Makefiles* - writing dependencies and keeping them up to date
+						* Can we get help from `g++`?
+							* `g++ -MMD -c vec.cc` - Creates `vec.o` and `vec.d`, the latter which contains the dependencies in the Makefile format
+								* `vec.d`: `vec.o: vec.cc vec.h`
+									* Now just include this in the Makefile
+{{{make
+CXX = g++
+CXXFLAGS = -std=c++14 -Wall -g -MMD
+OBJECTS = main.o vec.o
+DEPENDS = ${OBJECTS:.o=.d}
+EXEC = main
+
+${EXEC} ${OBJECTS}
+	${CXX} ${CXXFLAGS} ${OBJECTS} -o ${EXEC}
+	
+-include ${DEPENDS}
+}}}
+							* `OBJECTS` and `EXEC` are the only items that actually depend on the file names
+							* Makefile should always be the first thing you do (a copy is available in the repository)
+							* As the project expands, only add .o files to the Makefile
+			* Suppose we want to write a linear algebra module (separate/example3 in repository)
+{{{cpp
+// linalg.h
+#include "vec.h"
+}}}
+{{{cpp
+//linalg.cc
+#include "linalg.h"
+#include "vec.h"
+}}}
+{{{cpp
+// main.cc
+#include "linalg.h"
+#include "vec.h" 
+}}}
+				* Won't compile -- why?
+					* 

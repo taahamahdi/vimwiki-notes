@@ -233,7 +233,7 @@ struct Node {
 		* Single argument constructors create implicit conversions
 			* `Node n{4};`
 			* `Node n = 4;` is also legal, however
-				* Implicit conversion from `int` to `Node` (also done with `string s = "string"`, right part is C-style string)
+				* Implicit conversion from `int` to `Node` (also done with `string s = "string"`, right part is C-style string
 {{{cpp
 int f(Node n);
 f(4); // Works -- 4 is implicitly converted to Node
@@ -242,8 +242,7 @@ f(4); // Works -- 4 is implicitly converted to Node
 					* Silent conversion
 					* Compiler doesn't signal an error
 					* Potential errors not caught
-				* How can we disable the implicit conversion? 
-					* We need to make the constructor explicit with the `explicit` keyword
+				* How can we disable the implicit conversion? We need to make the constructor explicit with the `explicit` keyword
 {{{cpp
 struct Node {
 	explicit Node(int data): data {data}, next {nullptr} {}
@@ -257,9 +256,9 @@ f(Node{4}); // OK
 
 == Destructors ==
 
-* An object gets destroyed when: 
+* When an object is destroyed, 
 	* Stack-allocated: goes out of scope
-	* Heap-allocated: the object is deleted
+	* Heap-allocated: when object is deleted
 		1. Destructor body runs (classes come with a *destructor*)
 		2. Fields' destructors are invoked in reverse declaration order (for fields that are objects)
 		3. Space is deallocated
@@ -280,7 +279,7 @@ struct Node {
 }}}
 		* Now, `delete np;` frees the whole list -- recursively calls `*next`'s destructor, whole list is deallocated
 			* Deleting a null pointer is safe in C++, so this causes no errors
-				* *Recall*: deleting `NULL` in C is safe
+				* Recall: deleting `NULL` in C is safe
 
 == Copy Assignment Operator ==
 
@@ -324,296 +323,6 @@ struct Node {
 		data = other.data;
 		delete next; // Prevent memory leak
 		next = other.next ? new Node {*other.next} : nullptr;
-		// If new fails, the fuction quits immediately
-		// Assignment to next won't happen
-		// next was deleted, dangling pointer -- corrupted data structure
 		return *this;
 	}
 };
-}}}
-			* Would be better to create the copy first, then delete
-{{{cpp
-	...
-	Node &operator=(const node &other) {
-		if (this == &other) return *this;
-		Node *tmp = next;
-		next = other.next ? new Node {*other.next} : nullptr; // Copy constructor
-		data = other.data;
-		delete tmp; // Destructor
-		return *this; // If new fails, Node has old data
-	}
-}}}
-			* We can employ the copy-and-swap idiom to achieve the advantages of this version more concisely
-{{{cpp
-#include <utility>
-struct Node {
-	...
-	void swap(Node &other) {
-		using std::swap; // I mean std::swap if I say swap
-		swap(data, other.data);
-		swap(next, other.next);
-	}
-	
-	Node &operator=(const Node& other) {
-		Node tmp = other; // Copy constructor
-		swap(tmp);
-		return *this; // tmp deleted by going out of scope
-	}
-};
-}}}
-
-== R-values and R-value References ==
-
-* Recall:
-	* An l-value is anything with an address
-	* An l-value reference (`&`) is like a `const` pointer with auto-dereference: always initialized to an l-value
-	* Consider:
-{{{cpp
-Node n {1, new Node {2, nullptr}};
-
-Node m = n; // Copy constructor
-Node m2;
-m2 = n; // Copy assignment operator
-
-Node plusOne(Node n) {
-	for (Node *p = &n; p; p = p->next) {
-		++p.data;
-	}
-	return n;
-}
-
-Node m3 = plusOne(n);
-// What function is called?
-}}}
-		* If the definition of `m3` invokes the copy constructor (it does), what is `other`?
-			* `other` is an l-value reference, but what is the address of the object it points to?
-				* The compiler creates a temporary object to hold the result of `plusOne(n)`
-				* `other` is a reference to this temporary object, and the copy constructor deep-copies from the temporary object
-					* However, the temporary object is going to be discarded anyway, as soon as `Node m3  = plusOne(n);`
-					* It is wasteful to have to copy from the temporary object; we can just steal from it without copying
-					* We need to know if the parameter is a temporary object or a standalone object
-		* In C++, an *r-value reference* of type `Node&&` is a reference to a temporary object (an r-value) of type `Node`
-		* We can write a constructor that takes a `Node&&`:
-{{{cpp
-struct Node {
-	...
-	Node(Node&& other):data {other.data};
-		next {other.next} {
-			other.next = nullptr; 
-			// Prevents data we stole from being deleted
-			//	when other is deleted
-		}
-}}}
-			* Similarly:
-{{{cpp
-Node m;
-m = plusOne(n); // Assignment from a temp
-}}}
-			* To avoid copying from the temporary object whose data is about to be deleted, we write a *move assignment operator*:
-{{{cpp
-	...
-	Node &operator=(Node&& other) {
-		// Steal other's data, other destroys my old data
-		using std::swap;
-		swap(data, other.data);
-		swap(next, other.next);
-		return *this; // Other goes out of scope, deletes our data
-	}
-}}}
-			* The compiler will decide when to use the copy or move assignment operator based on whether the parameter is temporary
-			* Note:
-				* If you don't define a move constructor/assignment operator, the copy versions are used
-				* If the move constructor/move assignment operator is defined, it will replace all calls to the copy constructor/copy assignment operator when the argument is a temporary r-value. The compiler takes care of this
-
-== Copy/Move Elision ==
-
-{{{cpp
-Vec makeVec { return {0, 0}; }
-Vec v = makeVec(); // What runs here?
-}}}
-* In `g++`, just a basic constructor would be called -- not a move or copy constructor
-* In some circumstances, C++ is allowed to (but doesn't have to) skip calling copy/move constructors
-	* In this example, `makeVec` writes the result directly into the space occupied by `v` in the caller, rather than creating the object in its own stack-frame and then copying it
-* Another example:
-{{{cpp
-void doSomething(Vec v) { // Pass-by-value calls move/copy constructor
-	...
-}
-doSomething(makeVec()); 
-// Normally calls move constructor to construct v in doSomething
-}}}
-	* Under copy elision, the result of `makeVec()` would be written directly into the parameter of `doSomething`, saving a move
-	* Copy elision is allowed, even if dropping the constructor call would change the behavior of the program (e.g. the constructor prints something)
-		* Not expected to know when copy elision occurs, are expected to know it's possible
-	* To build without any copy elision: `g++14 -fno-elide-constructors`, but can slow down your program considerably
-	* In summary, we have the Rule of 5:
-		* If you need a custom version of any of these, you usually need a custom version of all five:
-			1. Copy constructor
-			2. Copy assignment operator
-			3. Destructor
-			4. Move constructor
-			5. Move assignment operator
-
-== Member Operators ==
-* In the previous discussion, we had `operator=` as a member function and not a standalone function
-* When an operator is a member function, this plays the role of the left-hand-side argument
-{{{cpp
-struct Vec {
-	int x, y;
-	...
-	Vec operator+(const Vec& rhs) {
-		return {x + rhs.x, y + rhs.y};
-	}
-	
-	Vec operator*(const int k) {
-		return {x * k, y * k};
-	}
-};
-}}}
-	* *Note*: `operator*`, `v * k` (`vec * int`) implements vector-scalar multiplication. What if I want `k * v`?
-		* It cannot be a member function, because the first argument is an `int`, not a `Vec`. Thus, it must be standalone:
-{{{cpp
-	...
-	Vec operator*(const int k, const Vec& v) {
-		return v * k;
-	}
-};
-}}}
-<<<<<<< HEAD
-* I/O operators:
-{{{cpp
-struct Vec {
-	...
-	ostream &operator<<(ostream &out) {
-		return out << x << ' ' << y;
-	}
-};
-}}}
-	* What's wrong with this?
-		* Makes `Vec` the first operand, not the second
-			* Implies usage as `v << out;` -- *Confusing*
-		* So define operator `<<`, `>>`, as non-members
-* Certain operators *must* be members:
-	* `operator=`
-	* `operator[]`
-	* `operator->`
-	* `operator()`
-	* `operator T`, where `T` is a type
-
-== Arrays of Objects ==
-
-{{{cpp
-struct Vec {
-	int x, y;
-	Vec(int x, int y): x{x}, y{y} {}
-};
-
-Vec *vp = new Vec[10];
-Vec moreVecs[10];
-// DOES NOT COMPILE
-}}}
-* `vp` and `moreVecs` want to call the default constructor on each item
-* If there is no default constructor, can't initialize the items
-* Options:
-	1. Provide a default constructor -- only if it makes sense to initialize with a default value
-	2. If object is on the stack, `Vec moreVecs[3] = { {0,0}, {1,1}, {2,4} };`
-		* Heap arrays of known size: `vec *vp = new Vec[3] { {0,0}, {1,1}, {2,4} };`
-	3. Heap arrays of dynamic size: create an array of pointers
-{{{cpp
-Vec **vp = new Vec*[5];
-vp[0] = new Vec {0,0};
-vp[1] = new Vec {1,1};
-...
-for (int i = 0; i < 5; i++) delete vp[i];
-
-delete []vp;
-}}}
-
-== `Const` Objects ==
-
-{{{cpp
-int f(const Node &n) {...}
-}}}
-* `const` objects arise often, especially as parameters
-* What is a `const` object?
-	* Can't change the fields
-* Can we call methods on a `const` object?
-	* *Issue*: The method might modify fields, violating `const`
-	* *Yes*, we can call methods that promise not to modify fields
-		* *Example*: 
-{{{cpp
-struct Student {
-	int assns, mt, final;
-	float grade() const;
-	// Adding const to the end means it doesn't modify fields
-};
-}}}
-			* The compiler checks that `const` methods don't modify fields
-			* Only `const` methods can be called on `const` objects
-			* Now consider: we cant to collect usage statistics on `Student` obejcts
-{{{cpp
-struct Student {
-	...
-	int numCalls = 0;
-	float grade() const {
-		numCalls++;
-		return ...;
-	}
-};
-}}}
-				* Can't call `grade()` on `const Student`s anymore
-					* Mutating `numCalls` affects only the *physical constness* of `Student` objects, not the *logical constness*
-						* Physical constness -- affect on the object itself
-						* Logical constness -- affect on the actual `Student` part (what the real world cares about)
-					* Want to be able to update `numCalls`, even if the object is `const`
-						* Declare the field *mutable* -- can be changed even if the object is `const`
-{{{cpp
-struct Student {
-	...
-	mutable int numCalls = 0;
-	float grade() const {
-		numCalls++;
-		return ...;
-	}
-};
-}}}
-
-== Static Fields and Methods ==
-
-* `numCalls` tracked the number of times a method was called on a *particular* object
-* What if we want to track the number of times a method is called over *all* `Student`s? What about tracking how many `Student`s are created?
-	* We use `static` members -- associated with the class itself, not with any particular object
-		* `static` members are like global variables scoped within a given class
-{{{cpp
-struct Student {
-	...
-	static int numStudents;
-	Student(...): ... {
-		numStudents++;
-	}
-};
-}}}
-{{{cpp
-int Student::numStudents = 0; // Mandatory, goes in .cc file
-}}}
-			* `static` fields must be defined external to the class
-* Member functions can also be `static` -- don't depend on a specific instance(no `this` parameter)
-	* However, you can only access `static` fields and only call other `static` member functions
-{{{cpp
-struct Student {
-	...
-	static int numStudents;
-	static void howMany() {
-		cout << numStudents;
-	}
-};
-}}}
-{{{cpp
-// Client code
-Student billy {60, 70, 80},
-		jane {70, 80, 90};
-Student::howMany(); // Prints 2
-// Replace "this" with "Student::"
-}}}
-=======
->>>>>>> fc70135842d4a4e8b91873f51c92f58f5eaea344

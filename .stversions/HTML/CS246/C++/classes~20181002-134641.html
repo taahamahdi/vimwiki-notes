@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>classes</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Classes"><h1 id="Classes">Classes</h1></div>
+
+<ul>
+<li>
+Can put functions inside of <code>struct</code>s
+
+<ul>
+<li>
+<span id="Classes-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+// student.h
+
+struct Student {
+	int assns, mt, final;
+	float grade();
+};
+</pre>
+<pre cpp>
+// student.cc
+#include "student.h"
+float student::grade() {
+	 return assns * 0.4 + mt * 0.2 + final * 0.4;
+}
+</pre>
+<pre cpp>
+	// Client
+	...
+	Student s{60, 70, 80};
+	cout &lt;&lt; s.grade() &lt;&lt; endl;
+</pre>
+
+</ul>
+<li>
+A <span id="Classes-class"></span><strong id="class">class</strong> is a <code>struct</code> type that can contain functions
+
+<ul>
+<li>
+Classes <span id="Classes-are"></span><strong id="are">are</strong> <code>struct</code>s
+
+<li>
+C++ has <code>class</code> keyword, which we will use later
+
+<li>
+An <span id="Classes-object"></span><strong id="object">object</strong> is an instance of a class
+
+<li>
+In the previous example, <code>Student</code> is the class, <code>s</code> is the object, and <code>grade()</code> is a member function/method
+
+<li>
+<code>::</code> is a scope resolution operator
+
+</ul>
+</ul>
+
+</body>
+</html>

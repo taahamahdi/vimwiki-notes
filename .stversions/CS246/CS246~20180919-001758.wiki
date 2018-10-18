@@ -1,0 +1,11 @@
+= CS246 =
+
+1. Linux Shell
+	* [[fileio|Files, Input, Output]]
+	* [[grep|Pattern matching (grep)]]
+	* [[permissions|Permissions]]
+	* [[shellscripts|Shell Scripts]]
+	* [[testing|Testing]]
+
+2. C++
+	* [[cpp|Intro to C++]]

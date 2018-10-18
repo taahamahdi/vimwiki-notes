@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>defaultarguments</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Default Arguments"><h1 id="Default Arguments">Default Arguments</h1></div>
+<ul>
+<li>
+New in C++
+<pre cpp>
+void printFile(string file = "myfile.txt") {
+	ifstream f {file};
+}
+
+printFile();
+printFile("hello.txt")
+</pre>
+
+<li>
+Parameters with default arguments <span id="Default Arguments-must"></span><strong id="must">must</strong> appear last
+
+<ul>
+<li>
+<code>void test(int num = 5, string str) {}</code> is illegal
+
+<li>
+<code>void test(int num = 5, string str = "foo") {}</code> is legal
+
+<ol>
+<li>
+<code>test(10, "bar");</code>
+
+<li>
+<code>test(10);</code>
+
+<li>
+<code>test();</code>
+
+<ul>
+<li>
+All valid examples of default arguments
+
+</ul>
+<li>
+<code>test("bar");</code>
+
+<li>
+<code>test(, "bar");</code>
+
+<ul>
+<li>
+Illegal calls of <code>test</code>
+
+</ul>
+</ol>
+<li>
+Functions can have the same name in C++
+
+<ul>
+<li>
+Function overloading
+
+<li>
+Looks at function signature (looks at parameter types and/or number of parameters)
+
+<li>
+Differing on return type is not enough
+
+<li>
+Default arguments act as if the function with that parameter only was implemented so it conflicts if you try to overload it
+<pre cpp>
+int negate(int i) { return -i; }
+int negate(bool b) { return !b; }
+</pre>
+
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

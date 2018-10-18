@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>separatecompilation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Separate Compilation"><h1 id="Separate Compilation">Separate Compilation</h1></div>
+
+<ul>
+<li>
+Split programs into <span id="Separate Compilation-modules"></span><strong id="modules">modules</strong>, which provide an <span id="Separate Compilation-interface"></span><strong id="interface">interface</strong>
+
+<ul>
+<li>
+Interface - Type defing, prototypes for functions, .h file
+
+<li>
+Implementation - full definition for all provided functions, .cc file
+
+<li>
+<span id="Separate Compilation-Recall"></span><strong id="Recall">Recall</strong>:
+
+<ul>
+<li>
+Declaration - Only asserts existence
+
+<li>
+Definition - Full details - allocates space for variables and functions
+
+</ul>
+<li>
+<span id="Separate Compilation-Example"></span><strong id="Example">Example</strong>:
+
+<ul>
+<li>
+Interface (<code>vec.h</code>):
+<pre cpp>
+struct Vec {
+	int x, y;
+};
+Vec operator+(const vec &amp;v1, const vec &amp;v2);
+extern int globalNum; // declaration
+</pre>
+
+<li>
+(<code>main.cc</code>):
+<pre cpp>
+#include "vec.h"
+int main() {
+	Vec v{1, 2};;
+	v = v + v;
+}
+</pre>
+
+<li>
+Implementation (<code>vec.cc</code>):
+<pre cpp>
+#include "vec.h" // Don't redefine structure definition -- changing it becomes harder
+Vec operator+(const vec &amp;v1, const vec &amp;v2) {
+	return v{v1.x + v2.x, v1.y + v2.y};
+}
+</pre>
+
+<li>
+<span id="Separate Compilation-Recall"></span><strong id="Recall">Recall</strong>:
+
+<ul>
+<li>
+An entity can be declared many times, but defined at most once.
+
+<li>
+Don't define variables in header files -- they are re-created multiple times, and the compiler gets confused
+
+<ul>
+<li>
+Add <code>extern</code> keyword in header file
+
+</ul>
+</ul>
+<li>
+Compiling separately:
+
+<ul>
+<li>
+<code>g++14 -c vec.cc</code>, <code>g++14 -c main.cc</code>
+
+<ul>
+<li>
+<code>-c</code> - compile only, do not link, do not try to build an executable
+
+<ul>
+<li>
+Outputs an object file (.o)
+
+</ul>
+<li>
+Then, you can run <code>g++14 vec.o main.o -o main</code> - links object files into an executable, can be run with <code>./main</code>
+
+</ul>
+<li>
+What happens if we change <code>vec.cc</code>?
+
+<ul>
+<li>
+Only need to recompile <code>vec.cc</code> and relink
+
+</ul>
+<li>
+What happens if we change <code>vec.h</code>?
+
+<ul>
+<li>
+Need to recompile <span id="Separate Compilation-both"></span><strong id="both">both</strong> <code>vec.cc</code> and <code>main.cc</code> (because they both include <code>vec.h</code>), and then relink
+
+</ul>
+<li>
+How can we keep track of dependencies and perform minimal recompilation?
+
+<ul>
+<li>
+Linux tool called <code>make</code>
+
+<ul>
+<li>
+Create a Makefile that says which files depend on which other files
+<pre make>
+main: main.o vec.o
+	g++ main.o vec.o -o main
+
+main.o: main.cc vec.h
+	g++ -std=c++14 -c main.cc
+
+vec.o: vec.cc vec.h
+	g++ -std=c++14 -c vec.cc
+	
+.PHONY: clean
+
+clean:
+	rm *.o main
+</pre>
+
+</ul>
+<li>
+Unindented lines are targets
+
+<li>
+Indentation is mandatory
+
+<ul>
+<li>
+Indentations must be tabs
+
+</ul>
+<li>
+Indented lines are recipes for building main from these files
+
+<li>
+<code>.PHONY</code> and <code>clean:</code> parts are optional targets for removing all binary files
+
+<li>
+Then, from the command line: <code>make</code>
+
+<ul>
+<li>
+Builds the whole program
+
+</ul>
+<li>
+Now, changing just <code>vec.cc</code> and running <code>make</code> compiles <code>vec.cc</code> only (not the whole program) and relinks
+
+<li>
+<code>make target</code> - builds the requested target - builds the first target if none are specified
+
+<ul>
+<li>
+<span id="Separate Compilation-Example"></span><strong id="Example">Example</strong>: Running <code>make clean</code> removes all binaries
+
+</ul>
+<li>
+Must use <code>g++</code> instead of <code>g++14</code> because <code>make</code> will not expand aliases
+
+</ul>
+<li>
+<code>make</code> - builds main
+
+<ul>
+<li>
+What does main depend on?
+
+<ul>
+<li>
+Recursively builds dependencies (if necessary)
+
+<li>
+Then builds main (if necessary)
+
+<ul>
+<li>
+Bases its decision on last modified date and time to compare which file is older
+
+<ul>
+<li>
+If a target is older than its dependencies, it is rebuilt
+
+</ul>
+</ul>
+<li>
+<span id="Separate Compilation-Example"></span><strong id="Example">Example</strong>: If <code>vec.cc</code> changes, it is newer than <code>vec.o</code>
+
+<ul>
+<li>
+<code>make</code> rebuilds <code>vec.o</code>
+
+<ul>
+<li>
+Now, <code>vec.o</code> is newer than main
+
+<ul>
+<li>
+<code>make</code> also rebuilds main
+
+</ul>
+</ul>
+</ul>
+</ul>
+<li>
+Generalize a Makefile with variables
+
+<ul>
+<li>
+<code>CXX = g++</code>
+
+<ul>
+<li>
+Gives compiler's name
+
+</ul>
+<li>
+<code>CXXFLAGS = -std=c++14 -Wall -g</code>
+
+<ul>
+<li>
+Compiler options
+
+</ul>
+<li>
+<code>OBJECTS = main.o vec.o</code>
+
+<ul>
+<li>
+Objects for project
+
+</ul>
+<li>
+<code>EXEC = main</code>
+
+<ul>
+<li>
+Name of executable
+<pre make>
+${EXEC}: ${OBJECTS}
+	${CXX} ${CXXFLAGS} ${OBJECTS} -o ${EXEC}
+
+main.o: main.cc vec.h
+
+vec.o: vec.cc vec.h
+
+.PHONY: clean
+
+clean:
+	rm ${EXEC} ${OBJECTS}
+</pre>
+
+</ul>
+<li>
+Can now omit the recipes - <code>make</code> guesses that the recipe is <code>\({CXX} \){CXXFLAGS} -c ...</code>
+
+<li>
+<span id="Separate Compilation-Hardest part of writing Makefiles"></span><strong id="Hardest part of writing Makefiles">Hardest part of writing Makefiles</strong> - writing dependencies and keeping them up to date
+
+<ul>
+<li>
+Can we get help from <code>g++</code>?
+
+<ul>
+<li>
+<code>g++ -MMD -c vec.cc</code> - Creates <code>vec.o</code> and <code>vec.d</code>, the latter which contains the dependencies in the Makefile format
+
+<ul>
+<li>
+<code>vec.d</code>: <code>vec.o: vec.cc vec.h</code>
+
+<ul>
+<li>
+Now just include this in the Makefile
+<pre make>
+CXX = g++
+CXXFLAGS = -std=c++14 -Wall -g -MMD
+OBJECTS = main.o vec.o
+DEPENDS = ${OBJECTS:.o=.d}
+EXEC = main
+
+${EXEC} ${OBJECTS}
+	${CXX} ${CXXFLAGS} ${OBJECTS} -o ${EXEC}
+	
+-include ${DEPENDS}
+</pre>
+
+</ul>
+</ul>
+<li>
+<code>OBJECTS</code> and <code>EXEC</code> are the only items that actually depend on the file names
+
+<li>
+Makefile should always be the first thing you do (a copy is available in the repository)
+
+<li>
+As the project expands, only add .o files to the Makefile
+
+</ul>
+</ul>
+</ul>
+</ul>
+<li>
+Suppose we want to write a linear algebra module (separate/example3 in repository)
+<pre cpp>
+// linalg.h
+#include "vec.h"
+</pre>
+<pre cpp>
+//linalg.cc
+#include "linalg.h"
+#include "vec.h"
+</pre>
+<pre cpp>
+// main.cc
+#include "linalg.h"
+#include "vec.h" 
+</pre>
+
+<ul>
+<li>
+Won't compile -- why?
+
+<ul>
+<li>
+<code>linalg.cc</code> and <code>main.cc</code> each get two copies of <code>vec.h</code> - <code>struct Vec</code> is defined twice
+
+<li>
+Need to prevent files from being included more than once
+
+<ul>
+<li>
+Use <code>#include guard</code>:
+<pre cpp>
+// vec.h
+#ifndef VEC_H
+#define VEC_H
+	.
+	.
+	.
+#endif
+</pre>
+
+<li>
+First time <code>vec.h</code> is included, the symbol <code>VEC_H</code> is not defined, so the file is included
+
+<li>
+Subsequently, <code>VEC_H</code> is defined, so <code>vec.h</code>'s contents are suppressed
+
+<li>
+<span id="Separate Compilation-Always"></span><strong id="Always">Always</strong> put <code>#include</code> guards in <code>.h</code> files
+
+<li>
+<span id="Separate Compilation-Never"></span><strong id="Never">Never</strong> put <code>using namespace std;</code> in header files
+
+<ul>
+<li>
+Forces this on all clients that include the header
+
+<li>
+Always <code>std::</code> in headers
+
+</ul>
+<li>
+<span id="Separate Compilation-Never"></span><strong id="Never">Never</strong> compile <code>.h</code> files
+
+<li>
+<span id="Separate Compilation-Never"></span><strong id="Never">Never</strong> include <code>.cc</code> files
+
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

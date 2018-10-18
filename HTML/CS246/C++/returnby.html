@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>returnby</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Return by Value / Pointer / Reference"><h1 id="Return by Value / Pointer / Reference">Return by Value / Pointer / Reference</h1></div>
+
+<pre cpp>
+Node getMeANode() {
+	Node n;
+	return n;
+}
+</pre>
+<ul>
+<li>
+<span id="Return by Value / Pointer / Reference-Expensive"></span><strong id="Expensive">Expensive</strong> - <code>n</code> is copied to caller's stack frame on <code>return</code> -- should we return a pointer instead?
+<pre cpp>
+Node *getMeANode() {
+	Node n;
+	return &amp;n;
+}
+</pre>
+
+<li>
+<span id="Return by Value / Pointer / Reference-Bad"></span><strong id="Bad">Bad</strong> - returns a pointer to stack allocated data, which is dead on <code>return</code>
+<pre cpp>
+Node *getMeANode() {
+	Node *np = new Node;
+	return np;
+}
+</pre>
+
+<li>
+<span id="Return by Value / Pointer / Reference-Better"></span><strong id="Better">Better</strong> - <code>returns</code> a pointer to heap data, which is still alive
+
+<ul>
+<li>
+Client has to know that it must be deleted when they're done with it
+
+</ul>
+<li>
+Which should I pick?
+
+<ul>
+<li>
+Return by value (first example), as it is simple and not as expensive as it looks
+
+</ul>
+</ul>
+
+</body>
+</html>

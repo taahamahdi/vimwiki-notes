@@ -1,0 +1,7 @@
+= CS246 =
+
+1. Linux Shell
+	* [[fileio|Files, Input, Output]]
+	* [[grep|Pattern matching (grep)]]
+	* [[permissions|Permissions]]
+	* [[shellscripts|Shell Scripts]]

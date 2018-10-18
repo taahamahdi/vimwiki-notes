@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>preprocessor</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="The Preprocessor"><h1 id="The Preprocessor">The Preprocessor</h1></div>
+
+<ul>
+<li>
+Transforms the program before the compiler sees it
+
+<ul>
+<li>
+<code>#______</code> indicates a <span id="The Preprocessor-preprocessor directive"></span><strong id="preprocessor directive">preprocessor directive</strong>
+
+<ul>
+<li>
+<code>#include</code> is one notable example
+
+</ul>
+</ul>
+<li>
+Including old C headers requires a new naming convention
+
+<ul>
+<li>
+<span id="The Preprocessor-Example"></span><strong id="Example">Example</strong>: Instead of <code>#include &lt;stdio.h&gt;</code>, use <code>#include &lt;cstdio&gt;</code>
+
+</ul>
+<li>
+We also have <code>#define VAR VALUE</code>, which sets a preprocessor variable <code>VAR</code>
+
+<ul>
+<li>
+Then all occurrences of <code>VAR</code> in the source file are replaced by <code>VALUE</code>
+
+<li>
+<span id="The Preprocessor-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+#define MAX 10
+int x[MAX];
+</pre>
+
+<ul>
+<li>
+The preprocessor transforms the statement to <code>int x[10];</code>
+
+<ul>
+<li>
+This use of <code>#define</code> is obsolete, <span id="The Preprocessor-use"></span><strong id="use">use</strong> <code>const</code> <span id="The Preprocessor-instead"></span><strong id="instead">instead</strong>
+
+</ul>
+</ul>
+<li>
+<code>#define FLAG</code> - sets the variable <code>FLAG</code> equal to the empty string (nothing)
+
+<li>
+Defined constants, however, are useful for conditional compilation
+
+<ul>
+<li>
+<span id="The Preprocessor-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+#define SECURITYLEVEL 1 // (or 2)
+
+#if SECURITYLEVEL == 1
+	short int
+#elif SECURITYLEVEL == 2
+	long long int
+#endif
+	publickey;
+</pre>
+
+<ul>
+<li>
+The line following the first <code>#if</code> statement is removed if <code>SECURITYLEVEL == 2</code>, and the line following the second <code>#if</code> statement is removed if <code>SECURITYLEVEL == 1</code>
+
+</ul>
+<li>
+<span id="The Preprocessor-Special case"></span><strong id="Special case">Special case</strong>:
+<pre cpp>
+#if 0 // Never true -- all inner text is removed before it reaches the compiler
+	...
+#endif
+</pre>
+
+<ul>
+<li>
+Useful for nested commenting (instead of using <code>/*</code> and <code>*/</code>, since nested comments can break)
+
+<li>
+Can be seen as a "heavy duty" comment-out feature
+
+</ul>
+<li>
+We can also define symbols via compiler arguments
+
+<ul>
+<li>
+<span id="The Preprocessor-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+// define.cc
+int main() {
+	cout &lt;&lt; X &lt;&lt; endl;
+}
+</pre>
+
+<ul>
+<li>
+We can use <code>-D</code> on the command line when compiling to set a preprocessor variable
+
+<ul>
+<li>
+<span id="The Preprocessor-Example"></span><strong id="Example">Example</strong>: <code>g++14 -DX=15 define.cc -o define</code>
+
+</ul>
+</ul>
+</ul>
+</ul>
+<li>
+<code>#ifdef NAME</code> - true if <code>NAME</code> has been defined
+
+<li>
+<code>#ifndef NAME</code> - true if <code>NAME</code> has not been defined
+
+<ul>
+<li>
+<span id="The Preprocessor-Example"></span><strong id="Example">Example</strong>: These macros are useful for debugging:
+<pre cpp>
+int main() {
+	#ifdef DEBUG
+		cerr &lt;&lt; "setting x = 1\n";
+	#endif
+	int x = 1;
+	while (x &lt; 10) {
+		++x;
+		#ifdef DEBUG
+			cerr &lt;&lt; "x is now" &lt;&lt; x &lt;&lt; endl;
+		#endif
+	}
+	cout &lt;&lt; x &lt;&lt; endl;
+}
+</pre>
+
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

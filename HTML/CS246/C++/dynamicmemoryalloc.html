@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>dynamicmemoryalloc</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Dynamic Memory Allocation"><h1 id="Dynamic Memory Allocation">Dynamic Memory Allocation</h1></div>
+<ul>
+<li>
+C:
+<pre c>
+int *p = malloc( ____ * sizeof(int));
+	...
+free(p);
+</pre>
+
+<ul>
+<li>
+<span id="Dynamic Memory Allocation-Do not use them in C++"></span><strong id="Do not use them in C++">Do not use them in C++</strong>
+
+<li>
+Instead, we use <code>new</code> / <code>delete</code> in C++
+
+<ul>
+<li>
+Type-aware
+
+<li>
+Less error prone
+
+</ul>
+<li>
+<span id="Dynamic Memory Allocation-Example"></span><strong id="Example">Example</strong>: Create a linked list
+<pre cpp>
+struct Node {
+	int data;
+	Node *next;
+};
+
+Node *np = new Node;
+	...
+delete np;
+</pre>
+
+<ul>
+<li>
+Allocated memory resides on the heap
+
+<li>
+Remains allocated until <code>delete</code> is called
+
+<li>
+If you don't delete all allocated memory, a <span id="Dynamic Memory Allocation-memory leak"></span><strong id="memory leak">memory leak</strong> occurs
+
+<ul>
+<li>
+Regarded as incorrect by Marmoset since the program will eventually fail -- all submitted programs must not contain any leaks
+
+</ul>
+</ul>
+</ul>
+</ul>
+
+<div id="Dynamic Memory Allocation-Allocating Arrays on the Heap"><h3 id="Allocating Arrays on the Heap">Allocating Arrays on the Heap</h3></div>
+
+<pre cpp>
+Node *nodeArray = new Node[10];
+	...
+delete [] nodeArray; // Different syntax for deleting an array
+</pre>
+
+<ol>
+<li>
+Memory allocated with <code>new</code> must be deallocated with <code>delete</code>
+
+<li>
+Memory allocated with with <code>new [...]</code> must be deallocated with <code>delete[]</code>
+
+<ul>
+<li>
+Mixing these two is undefined behavior
+
+</ul>
+</ol>
+
+</body>
+</html>

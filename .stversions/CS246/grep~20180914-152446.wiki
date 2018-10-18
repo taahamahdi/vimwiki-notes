@@ -1,0 +1,35 @@
+= Pattern Matching (grep) =
+
+* `grep` / `egrep` - [Extended] global regular expression print
+* `egrep pattern file` - print every line in file that contains pattern
+	* *Example*: Print every line in `myfile` that contains `cs246`
+		* `egrep cs246 myfile`
+	* How many lines in `myfile` contain `cs246` or `CS246`?
+		* `egrep "cs246|CS246" myfile | wc -l`
+		* `egrep "(cs|CS)246" myfile | wc -l`
+		* `egrep "(c|C)(s|S)246" myfile | wc -l` - also includes `cS246`, `Cs246`
+		* `egrep "[cC][sS]246"` - any one character between `[` and `]`
+		* `egrep "[^...]"` - any character _except_ `...`
+	* Available patterns - called *regular expressions*
+		* (different from globbing patterns)
+		* If the pattern contains anything the shell might incorrectly parse (`|`), use quotes
+		* Add option space: `[cC][sS] ?246`
+			* `?` - 0 or 1 preceding expression (0 or 1 whitespace in this context)
+			* `*` - 0 or more of preceding expression
+				* `"(cs)*246"` - returns with `246`, `cs246`, `cscs246`, etc.
+			* `+` - 1 or more of preceding expression
+			* `.` - Any single character
+			* `.*` - *Anything*
+				* `egrep "cs.*246"` - lines containing `cs`...(anything)...`246`
+			* `.+` - anything non-blank
+			* `^` / `$` - beginning / end of line
+				* `"^cs246"` - lines that start with `cs246`
+				* `"^cs246$"` - lines that are exactly `cs246`, nothing less
+	* *Example*: Lines of even length
+		* `"^(...)*$"`
+			* Any 2 characters, repeated any number of times
+			* To run a `grep` search that rquires the whole line, using `^` and `$` are usually necessary
+	* *Example*: Files in the current directory whose names contain exactly one "a"
+		* `ls | egrep "^[^a]*a[^a]*$"`
+	* *Example*: All words in dictionary that start with "e" and have 5 characters
+		* `egrep "^e....$" /usr/share/dict/words`

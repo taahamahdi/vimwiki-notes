@@ -1,0 +1,10 @@
+= Default Arguments =
+* New in C++
+{{{cpp
+void printFile(string file = "myfile.txt") {
+	ifstream f {file};
+}
+
+printFile();
+printFile("hello.txt")
+}}}

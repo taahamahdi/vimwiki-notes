@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>classes</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Classes"><h1 id="Classes">Classes</h1></div>
+
+<ul>
+<li>
+Can put functions inside of <code>struct</code>s
+
+<ul>
+<li>
+<span id="Classes-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+// student.h
+
+struct Student {
+	int assns, mt, final;
+	float grade();
+};
+</pre>
+<pre cpp>
+// student.cc
+#include "student.h"
+float student::grade() {
+	return assns * 0.4 + mt * 0.2 + final * 0.4;
+}
+</pre>
+<pre cpp>
+// Client
+...
+Student s{60, 70, 80};
+cout &lt;&lt; s.grade() &lt;&lt; endl;
+</pre>
+
+</ul>
+<li>
+A <span id="Classes-class"></span><strong id="class">class</strong> is a <code>struct</code> type that can contain functions
+
+<ul>
+<li>
+Classes <span id="Classes-are"></span><strong id="are">are</strong> <code>struct</code>s
+
+<li>
+C++ has <code>class</code> keyword, which we will use later
+
+<li>
+An <span id="Classes-object"></span><strong id="object">object</strong> is an instance of a class
+
+<li>
+In the previous example, <code>Student</code> is the class, <code>s</code> is the object, and <code>grade()</code> is a member function/method
+
+<li>
+<code>::</code> is a scope resolution operator - <code>c::f</code> means <code>f</code> in the context of <code>c</code>
+
+<ul>
+<li>
+<code>::</code> is similar to <code>.</code> where the left hand side is a class (or namespace), not an object
+
+</ul>
+<li>
+<span id="Classes-Example"></span><strong id="Example">Example</strong> cont.: What do <code>assns</code>, <code>mt</code>, and <code>final</code> mean inside of <code>Student::grade</code>?
+
+<ul>
+<li>
+They are fields of the <em>current</em> object - the object upon which <code>grade()</code> was called
+<pre cpp>
+Student billy {...};
+billy.grade(); // method call, uses billy's assns, mt, final
+</pre>
+
+<li>
+Formally, methods take a hidden extra parameter called <code>this</code> - a pointer to the object on which the method was called
+
+<li>
+<code>billy.grade()</code> has a hidden parameter <code>this == &amp;billy</code>
+
+<li>
+Explicitly stating the <code>this</code> parameter is allowed
+<pre cpp>
+struct Student {
+	...
+	float grade() {
+		return this-&gt;assns * 0.4 + this-&gt;mt * 0.2 + this-&gt;final * 0.4;
+	}
+}
+</pre>
+
+<ul>
+<li>
+Additionally, methods can be written directly in the class. They should be in <code>.cc</code> files in assignments
+
+</ul>
+</ul>
+</ul>
+</ul>
+
+<div id="Classes-Initializing Objects"><h2 id="Initializing Objects">Initializing Objects</h2></div>
+
+<ul>
+<li>
+<code>Student billy{70, 80, 90};</code> - C-style <code>struct</code> initialization
+
+<ul>
+<li>
+"Okay but limited" - not a lot of control
+
+</ul>
+<li>
+Better - write a method that initializes - a <span id="Classes-Initializing Objects-constructor"></span><strong id="constructor">constructor</strong>
+<pre cpp>
+struct Student {
+	int assns, mt, final;
+	float grade();
+	Student(int assns, int mt, int final);
+};
+</pre>
+<pre cpp>
+Student::Student(int assns, int mt, int final) {
+	this-&gt;assns = assns;
+	this-&gt;mt = mt;
+	this-&gt;final = final;
+}
+
+Student billy{70, 80, 90}; // better
+</pre>
+
+<ul>
+<li>
+If a constructor has been defined, these (<code>70, 80, 90</code>) are passed as arguments to the constructor
+
+<li>
+If no constructor has been defined, then falls back to C-style <code>struct</code> initialization (initialize the individual fields of <code>Student</code>)
+
+<li>
+Can also do <code>Student billy = Student{70, 80, 90};</code>
+
+<li>
+Heap allocation: <code>Student billy = new Student{70, 80, 90};</code>
+
+</ul>
+<li>
+Advantages of constructors:
+
+<ul>
+<li>
+Default parameters
+
+<li>
+Overloading
+
+<li>
+Sanity checks (legal value checks)
+<pre cpp>
+struct Student {
+	...
+	Student(int assns = 0, int mt = 0, int final = 0);
+	...
+};
+
+Student jane{70, 80); // 70, 80, 0
+Student newkid; // 0, 0, 0
+</pre>
+
+<ul>
+<li>
+<span id="Classes-Initializing Objects-Note"></span><strong id="Note">Note</strong>: Every class comes with a default (zero argument) constructor
+
+<ul>
+<li>
+Default-constructs all fields <span id="Classes-Initializing Objects-that are objects"></span><strong id="that are objects">that are objects</strong>
+
+<li>
+<code>Vec v;</code> calls default constructor
+
+<ul>
+<li>
+Since <code>Vec</code> only has <code>int</code> types, it does nothing
+
+</ul>
+<li>
+But the built-in default constructor goes away if you write any constructor
+
+<li>
+<span id="Classes-Initializing Objects-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+struct Vec {
+	int x, y;
+	Vec(int x, int y) {
+		this-&gt;x = x;
+		this-&gt;y = y;
+	}
+};
+
+Vec v; // DOES NOT COMPILE, no default constructor
+Vec v{1, 2}; // Still works
+</pre>
+
+</ul>
+<li>
+What if a <code>struct</code> contains constants or references?
+
+<ul>
+<li>
+Both need to be initialized!
+<pre cpp>
+struct MyStruct {
+	const int myconst;
+	int &amp;myRef;
+}
+</pre>
+
+</ul>
+</ul>
+</ul>
+</ul>
+
+<ul>
+<li>
+Bad idea:
+<pre cpp>
+int z;
+struct MyStruct {
+	const int myConst = 5;
+	int &amp;myRef = z;
+};
+</pre>
+
+<ul>
+<li>
+Does <span id="Classes-Initializing Objects-every"></span><strong id="every">every</strong> instance of <code>MyStruct</code> need to have the same value of <code>myConst</code>, etc.?
+
+<li>
+<span id="Classes-Initializing Objects-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+struct Student {
+	const int id; // constant (doesn't change) but is not the same for all students
+	...
+};
+</pre>
+
+<li>
+Where do we initialize?
+
+<ul>
+<li>
+Constructor body? Too late -- fields must be fully constructed by then
+
+<li>
+To answer this, we must ask:
+
+<li>
+What happens when an object is created?
+
+<ol>
+<li>
+Space is allocated
+
+<li>
+Fields are constructed in declaration order (constructors run for fields that are objects)
+
+<li>
+Constructor body runs
+
+</ol>
+<li>
+Since step 3 is too late and step 1 isn't possible, we must put our initializations in step 2
+
+<ul>
+<li>
+<span id="Classes-Initializing Objects-Member Initialization List (MIL)"></span><strong id="Member Initialization List (MIL)">Member Initialization List (MIL)</strong>
+<pre cpp>
+Student::Student(int id, int assns, int mt, int final):
+	id{id}, assns{assns}, mt{mt}, final{final} { }
+</pre>
+
+<ul>
+<li>
+Variables outside of braces are fields, variables inside are parameters
+
+<li>
+Can initialize <span id="Classes-Initializing Objects-any"></span><strong id="any">any</strong> field this way (good practice), not just constants and references
+
+<li>
+Fields are <span id="Classes-Initializing Objects-always"></span><strong id="always">always</strong> initialized in <span id="Classes-Initializing Objects-declaration order"></span><strong id="declaration order">declaration order</strong>, even if MIL orders them differently
+
+<li>
+Any expression (like a function call) is valid inside of the braces
+
+<li>
+MIL is sometimes more efficient than setting fields in the body
+
+<ul>
+<li>
+<span id="Classes-Initializing Objects-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+struct Student {
+	string name;
+	...
+};
+</pre>
+
+<li>
+(Otherwise you run the default constructor in step 2 and then reassign in step 3)
+
+<li>
+<span id="Classes-Initializing Objects-Embrace the MIL"></span><strong id="Embrace the MIL">Embrace the MIL</strong>
+
+</ul>
+</ul>
+</ul>
+<li>
+What if a field is initialized inline <span id="Classes-Initializing Objects-AND"></span><strong id="AND">AND</strong> in the MIL?
+<pre cpp>
+struct Vec {
+	int x = 0, y = 0;
+	vec(int x): x{x}
+};
+</pre>
+
+<ul>
+<li>
+MIL takes precedence, inline field construction is only performed if the field is not mentioned in MIL.
+
+</ul>
+</ul>
+</ul>
+</ul>
+<li>
+Copy constructor
+<pre cpp>
+Student billy {70, 80, 90};
+Student bobby = billy;
+</pre>
+
+<ul>
+<li>
+For creating one object as a copy of another
+
+<li>
+<span id="Classes-Initializing Objects-Note"></span><strong id="Note">Note</strong>: Every class comes with:
+
+<ul>
+<li>
+Default constructor - default constructs all fields <span id="Classes-Initializing Objects-that are objects"></span><strong id="that are objects">that are objects</strong>, lost if you write any constructor
+
+<li>
+Copy constructor - copies all fields
+
+<li>
+Copy assignment operator
+
+<li>
+Destructor
+
+<li>
+Move constructor
+
+<li>
+Move assignment operator
+
+</ul>
+<li>
+Building your own copy constructor:
+<pre cpp>
+struct Student {
+	int assns, mt, final;
+	...
+	Student(const Student &amp;other): assns{other.assns}, mt{other.mt}, final{other.final} // Building a student from another student
+	{...} // Equivalent to built-in copy constructor
+};
+</pre>
+
+<ul>
+<li>
+When is the built-in copy constructor not correct?
+
+<li>
+Consider:
+<pre cpp>
+struct Node {
+	int data;
+	Node *next;
+}; // built-in copy constructor
+
+Node *n = new Node {1, new Node {2, new Node {3, nullptr}}};
+Node m = *n;
+Node *p = new Node {*n}; // Both call copy constructor
+</pre>
+<table>
+<tr>
+<th>
+Memory
+</th>
+<th>
+Stack
+</th>
+<th>
+Heap
+</th>
+</tr>
+<tr>
+<td>
+&nbsp;
+</td>
+<td>
+n [ ]
+</td>
+<td>
+-------&gt; [1 [] -]---&gt;[2 [] -]---&gt;[3 [] /]
+</td>
+</tr>
+<tr>
+<td>
+&nbsp;
+</td>
+<td>
+m [1]--------------------
+</td>
+<td>
+---------------^
+</td>
+</tr>
+<tr>
+<td>
+&nbsp;
+</td>
+<td>
+p [ ]-------&gt; [1 [] -]---
+</td>
+<td>
+---------------^
+</td>
+</tr>
+</table>
+
+</ul>
+</ul>
+		
+<ul>
+<li>
+Simple copy of fields implies only the first node is actually copied (<span id="Classes-Initializing Objects-shallow copy"></span><strong id="shallow copy">shallow copy</strong>)
+
+<li>
+If you want a <span id="Classes-Initializing Objects-deep copy"></span><strong id="deep copy">deep copy</strong> (copies the whole list), must write your own copy constructor
+<pre cpp>
+struct Node {
+	...
+	Node(const Node &amp;other): data{other.data},
+	next { other.next ? new Node {*other.next} : nullptr} {}
+	// new Node {*other.next} recursively copies the rest of the list
+</pre>
+
+<ul>
+<li>
+The copy constructor is called:
+
+<ol>
+<li>
+When an object is initialized by another object of the same type
+
+<li>
+When an object is passed by value 
+
+<li>
+When an object is returned by value from a function
+
+<ul>
+<li>
+(For now, this will change soon)
+
+</ul>
+</ol>
+<li>
+Why do we pass by reference instead by value?
+
+<ul>
+<li>
+Passing by value will try to make a copy, which is a circular definition
+
+</ul>
+</ul>
+</ul>
+<li>
+<span id="Classes-Initializing Objects-Note"></span><strong id="Note">Note</strong>: Be careful with constructors that can take <span id="Classes-Initializing Objects-one"></span><strong id="one">one</strong> parameter
+
+<ul>
+<li>
+<span id="Classes-Initializing Objects-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+struct Node {
+	...
+	Node(int data): data {data}, next {nullputr} {}
+};
+</pre>
+
+<li>
+Single argument constructors create implicit conversions
+
+<ul>
+<li>
+<code>Node n{4};</code>
+
+<li>
+<code>Node n = 4;</code> is also legal, however
+
+<ul>
+<li>
+Implicit conversion from <code>int</code> to <code>Node</code> (also done with <code>string s = "string"</code>, right part is C-style string
+<pre cpp>
+int f(Node n);
+f(4); // Works -- 4 is implicitly converted to Node
+</pre>
+
+<li>
+Danger comes from accidentally passing an <code>int</code> to a function expecting a <code>Node</code>
+
+<ul>
+<li>
+Silent conversion
+
+<li>
+Compiler doesn't signal an error
+
+<li>
+Potential errors not caught
+
+</ul>
+<li>
+How can we disable the implicit conversion? We need to make the constructor explicit with the <code>explicit</code> keyword
+<pre cpp>
+struct Node {
+	explicit Node(int data): data {data}, next {nullptr} {}
+};
+
+Node n{4}; // OK
+Node n = 4; // Error
+f(4); // Error
+f(Node{4}); // OK
+</pre>
+
+</ul>
+</ul>
+</ul>
+
+<div id="Classes-Destructors"><h2 id="Destructors">Destructors</h2></div>
+
+<ul>
+<li>
+When an object is destroyed, 
+
+<ul>
+<li>
+Stack-allocated: goes out of scope
+
+<li>
+Heap-allocated: when object is deleted
+
+<ol>
+<li>
+Destructor body runs (classes come with a <span id="Classes-Destructors-destructor"></span><strong id="destructor">destructor</strong>)
+
+<li>
+Fields' destructors are invoked in reverse declaration order (for fields that are objects)
+
+<li>
+Space is deallocated
+
+</ol>
+</ul>
+<li>
+When do we need to write a destructor?
+<pre cpp>
+Node *np = new Node {1, new Node { 2, new Node {3, nullptr}}};
+</pre>
+
+<ul>
+<li>
+If <code>np</code> goes out of scope -- <code>np</code>, the pointer, is reclaimed (since it is stack allocated)
+
+<ul>
+<li>
+All three <code>Node</code>s are leaked (since they are heap allocated)
+
+</ul>
+<li>
+If we say <code>delete np;</code> -- calls <code>*np</code>'s destructor, which does nothing
+
+<ul>
+<li>
+<code>np</code>'s pointer is freed, first item is freed, but 2 items leak
+
+</ul>
+<li>
+Write a destructor to ensure the whole list is freed:
+<pre cpp>
+struct Node {
+	...
+	~Node() { delete next; }
+};
+</pre>
+
+<ul>
+<li>
+Now, <code>delete np;</code> frees the whole list -- recursively calls <code>*next</code>'s destructor, whole list is deallocated
+
+<ul>
+<li>
+Deleting a null pointer is safe in C++, so this causes no errors
+
+<ul>
+<li>
+Recall: deleting <code>NULL</code> in C is safe
+
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+
+<div id="Classes-Copy Assignment Operator"><h2 id="Copy Assignment Operator">Copy Assignment Operator</h2></div>
+
+<pre cpp>
+Student billy{70, 80, 90};
+Student jane = billy; // Copy constructor
+
+Student joey; // Default constructor
+joey = billy; // Copy, but not a construction (joey was already constructed, thus assigned from billy) -- copy assignment operator
+</pre>
+
+<ul>
+<li>
+Copy assignment operator uses built-in implementation
+
+<li>
+May need to write your own (such as to prevent a shallow copy with <code>Node</code>)
+<pre cpp>
+struct Node {
+	...
+	Node &amp;operator=(const Node &amp;other) {
+	// Return the item assigned so cascading assignment works (x = y = z = 3)
+	// No need for MIL because all fields have been constructed already -- MIL only applies to constructors
+		data = other.data;
+		delete next; // Prevent memory leak
+		next = other.next ? new Node {*other.next} : nullptr;
+		return *this;
+	} // **WRONG AND DANGEROUS**
+};
+</pre>
+
+<ul>
+<li>
+This implementation is <span id="Classes-Copy Assignment Operator-WRONG AND DANGEROUS"></span><strong id="WRONG AND DANGEROUS">WRONG AND DANGEROUS</strong>
+
+<ul>
+<li>
+Why?
+
+<ul>
+<li>
+<code>Node n{1, new Node{2, new Node{3, nullptr}}};</code>
+
+<li>
+<code>n = n;</code> -- deletes <code>n</code> and then tries to copy <code>n</code> to <code>n</code>, leading to undefined behavior
+
+<li>
+This isn't just one case:
+
+<ul>
+<li>
+If <code>*p = *q;</code>, where both point to the same item, self-assignment occurs
+
+<li>
+<code>a[i] = a[j];</code> where <code>i = j</code>, <code>n = m;</code> and <code>m</code> is a reference to <code>n</code>, etc.
+
+</ul>
+<li>
+<span id="Classes-Copy Assignment Operator-When writing"></span><strong id="When writing">When writing</strong> <code>operator=</code>, <span id="Classes-Copy Assignment Operator-ALWAYS watch out for self-assignment"></span><strong id="ALWAYS watch out for self-assignment">ALWAYS watch out for self-assignment</strong>
+<pre cpp>
+struct Node {
+	...
+	Node &amp;operator=(const node &amp;other) {
+		if (this == &amp;other) return *this; // Prevent self-assigment errors
+		// The rest is the same
+		data = other.data;
+		delete next; // Prevent memory leak
+		next = other.next ? new Node {*other.next} : nullptr;
+		// If new fails, the fuction quits immediately
+		// Assignment to next won't happen
+		// next was deleted, dangling pointer -- corrupted data structure
+		return *this;
+	}
+};
+</pre>
+
+</ul>
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

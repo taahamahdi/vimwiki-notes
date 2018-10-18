@@ -1,0 +1,46 @@
+= Operator Overloading =
+
+* Give meanings to C++ operators for types we create
+* *Example*:
+{{{cpp
+struct Vec {
+	int x, y;
+};
+
+Vec operator+(const Vec &v1, const Vec &v2) {
+	Vec v { v1.x + v2.x, v1.y + v2.y };
+	return v;
+}
+
+Vec operator*(const int k, const Vec &v) {
+	return { k * v.x, k * v.y };
+}
+}}}
+	* Allowed because compiler knows it's a `Vec` based on the return type
+	* Problem -- `*` operator handles `k * v` but not `v * k`
+{{{cpp
+Vec operator*(const Vec &v, const int k) {
+	return k * v;
+}
+}}}
+
+=== Special case: Overloading `<<` and `>>` ===
+
+* *Example*: Define our own structure to define custom behavior with operators
+{{{cpp
+struct Grade {
+	int theGrade;
+};
+
+ostream &operator<<(ostream &out, const Grade &g) {
+	out << g.theGrade << '%';
+	return out;
+}
+
+istream &operator>>(istream &in, Grade &g) {
+	in >> g.theGrade;
+	if (g.theGrade < 0) g.theGrade = 0;
+	if (g.theGrade > 100) g.theGrade = 100;
+	return in;
+}
+}}}

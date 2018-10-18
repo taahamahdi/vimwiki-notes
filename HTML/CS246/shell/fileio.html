@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>fileio</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Files, Input, Output"><h1 id="Files, Input, Output">Files, Input, Output</h1></div>
+<ul>
+<li>
+Shell - Interface to the OS, get OS to run programs/manage files
+
+<ul>
+<li>
+Graphical shell - GNOME, i3, GKDE, etc. (touch/click)
+
+<li>
+Command line - type commands at a prompt - more versatile
+
+</ul>
+<li>
+Bash
+
+<li>
+Files, Input, Output
+
+<ul>
+<li>
+<code>cat</code> - displays contents of a file
+
+<ul>
+<li>
+Entering just <code>cat</code> prints everything you type
+
+</ul>
+<li>
+<code>cat &gt; myfile.txt</code>, Ctrl + D at beginning of a line, sends end of file (EOL) signal to <code>cat</code>
+
+<li>
+<code>command args &gt; file</code> - executes command, capture output in file, instead of sending to screen
+
+<ul>
+<li>
+Output redirection
+
+</ul>
+<li>
+<code>cat -n</code> (prints line numbers)
+
+<li>
+<code>cat &lt; file</code> - takes input from file instead of keyboard
+
+<li>
+Difference between <code>cat [file]</code> and <code>cat &lt; [file]</code>?
+
+<ul>
+<li>
+<code>cat [file]</code> - passes file as an argument to <code>cat</code>
+
+<ul>
+<li>
+<code>cat</code> opens the file and displays it
+
+</ul>
+<li>
+<code>cat &lt; file</code> - shell opens file, sends the characters to <code>cat</code> (in place of keyboard)
+
+</ul>
+<li>
+<code>cat /usr/share/dict/words</code>
+
+<li>
+In Linux, a directory is just a special kind of file
+
+<li>
+In Linux, every line of a valid test file must end with a newline character <span id="Files, Input, Output-(including the last one)"></span><strong id="(including the last one)">(including the last one)</strong>
+
+<li>
+<code>pwd</code>, <code>ls</code>
+
+<li>
+<code>wc</code> - gets word-count, character count of file
+
+<li>
+<code>*.txt</code> - globbing pattern
+
+<ul>
+<li>
+<code>*</code> - match any sequence of characters
+
+<li>
+<code>cat *.txt</code> -&gt; <code>cat myfile.txt myfile2.txt</code>
+
+<li>
+<code>cat &lt; input.txt &gt; output.txt</code> copies the file
+
+</ul>
+<li>
+Every process is attached to 3 streams
+	<img src="/home/cool/Documents/Vimwiki/CS246/Images/ONENOTE_2018-09-13_22-22-02.png" />
+
+<li>
+By default, <code>stdin</code> is keyboard input, while <code>stdout</code> / <code>stderr</code> is screen output
+
+<li>
+Input redirection - connects <code>stdin</code> to a file (<code>&lt;</code>)
+
+<li>
+Output redirection - connects <code>stdout</code> to a file (<code>&gt;</code>)
+
+<li>
+<code>stderr</code>
+
+<ul>
+<li>
+Separate output stream for error messages
+
+<li>
+Output and error can go to separate places
+
+<li>
+Prevents error messages from corrupting output formatting
+
+</ul>
+<li>
+Also - <code>stdout</code> may be <span id="Files, Input, Output-buffered"></span><strong id="buffered">buffered</strong>
+
+<ul>
+<li>
+System may wait to accumulate output before actually displaying it
+
+<li>
+Sending out input flushes the buffer (displays it)
+
+<li>
+<code>stderr</code> is <em>never</em> buffered, error messages immediately
+
+</ul>
+<li>
+Can also redirect <code>stderr</code>
+
+<ul>
+<li>
+<code>program args &lt; infile &gt; outfile 2&gt; errfile</code>
+
+</ul>
+<li>
+Pipes
+
+<ul>
+<li>
+Using output of one program as input of another
+
+<li>
+Set 2nd program's <code>stdin</code> to 1st program's <code>stdout</code>
+
+<li>
+<span id="Files, Input, Output-Example"></span><strong id="Example">Example</strong>: How many words occur in the first 20 lines of <code>myfile</code>?
+
+<ul>
+<li>
+Tools (on the Linux commands sheet):
+
+<ul>
+<li>
+<code>head -n file</code> - gives first <code>n</code> lines of file
+
+<li>
+<code>wc</code> - counts lines, words, or characters (depending on options)
+
+<ul>
+<li>
+<code>wc -w</code> - returns just the word count
+
+</ul>
+</ul>
+</ul>
+<li>
+<span id="Files, Input, Output-Solution"></span><strong id="Solution">Solution</strong>:
+
+<ul>
+<li>
+<code>head -20 myfile | wc -w</code>
+
+<li>
+<code>cat myfile | head -20 | wc -w</code>
+
+</ul>
+<li>
+<span id="Files, Input, Output-Example"></span><strong id="Example">Example</strong>: Suppose <code>words1.txt</code>, <code>words2.txt</code>, etc. contains lists of words, one word per file. Print a duplicate-free list of all words that occur in any of these.
+
+<ul>
+<li>
+<code>uniq</code> - removes <em>adjacent</em> duplicates
+
+<ul>
+<li>
+If the entries are sorted, removes all duplicates
+
+</ul>
+<li>
+<code>sort</code> - sorts lines
+
+</ul>
+<li>
+<span id="Files, Input, Output-Solution"></span><strong id="Solution">Solution</strong>:
+
+<ul>
+<li>
+<code>cat words*.txt | sort | uniq</code>
+
+</ul>
+</ul>
+<li>
+We can use the output of one program as the argument of another
+
+<ul>
+<li>
+<span id="Files, Input, Output-Example"></span><strong id="Example">Example</strong>: <code>echo "Today is \((date) and I am \)(whoami)"</code>
+
+<ul>
+<li>
+Shell executes <code>date</code> and <code>whoami</code> and then substitutes the result on the command line
+
+</ul>
+<li>
+Without quotes, <code>echo</code> prints everything one by one
+
+<ul>
+<li>
+Adding extra spaces and removing quotes (<code>echo      testing</code>) gets rid of the whitespaces (<code>echo</code> isn't whitespace-sensitive)
+
+</ul>
+<li>
+<code>echo 'Today is \((date) and I am \)(whoami)'</code>
+
+<ul>
+<li>
+Doesn't do any substitutions, instead printing exactly what is given (no dollar expansion)
+
+</ul>
+<li>
+Both kinds of quotes suppress glob expansion
+
+<ul>
+<li>
+<code>echo "*"</code> == <code>echo '*'</code> -&gt; <code>*</code>
+
+</ul>
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

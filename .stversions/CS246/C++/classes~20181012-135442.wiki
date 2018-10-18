@@ -1,0 +1,332 @@
+= Classes =
+
+* Can put functions inside of `struct`s
+	* *Example*:
+{{{cpp
+// student.h
+
+struct Student {
+	int assns, mt, final;
+	float grade();
+};
+}}}
+{{{cpp
+// student.cc
+#include "student.h"
+float student::grade() {
+	return assns * 0.4 + mt * 0.2 + final * 0.4;
+}
+}}}
+{{{cpp
+// Client
+...
+Student s{60, 70, 80};
+cout << s.grade() << endl;
+}}}
+* A *class* is a `struct` type that can contain functions
+	* Classes *are* `struct`s
+	* C++ has `class` keyword, which we will use later
+	* An *object* is an instance of a class
+	* In the previous example, `Student` is the class, `s` is the object, and `grade()` is a member function/method
+	* `::` is a scope resolution operator - `c::f` means `f` in the context of `c`
+		* `::` is similar to `.` where the left hand side is a class (or namespace), not an object
+	* *Example* cont.: What do `assns`, `mt`, and `final` mean inside of `Student::grade`?
+		* They are fields of the _current_ object - the object upon which `grade()` was called
+{{{cpp
+Student billy {...};
+billy.grade(); // method call, uses billy's assns, mt, final
+}}}
+		* Formally, methods take a hidden extra parameter called `this` - a pointer to the object on which the method was called
+		* `billy.grade()` has a hidden parameter `this == &billy`
+		* Explicitly stating the `this` parameter is allowed
+{{{cpp
+struct Student {
+	...
+	float grade() {
+		return this->assns * 0.4 + this->mt * 0.2 + this->final * 0.4;
+	}
+}
+}}}
+			* Additionally, methods can be written directly in the class. They should be in `.cc` files in assignments
+
+== Initializing Objects ==
+
+* `Student billy{70, 80, 90};` - C-style `struct` initialization
+	* "Okay but limited" - not a lot of control
+* Better - write a method that initializes - a *constructor*
+{{{cpp
+struct Student {
+	int assns, mt, final;
+	float grade();
+	Student(int assns, int mt, int final);
+};
+}}}
+{{{cpp
+Student::Student(int assns, int mt, int final) {
+	this->assns = assns;
+	this->mt = mt;
+	this->final = final;
+}
+
+Student billy{70, 80, 90}; // better
+}}}
+	* If a constructor has been defined, these (`70, 80, 90`) are passed as arguments to the constructor
+	* If no constructor has been defined, then falls back to C-style `struct` initialization (initialize the individual fields of `Student`)
+	* Can also do `Student billy = Student{70, 80, 90};`
+	* Heap allocation: `Student billy = new Student{70, 80, 90};`
+* Advantages of constructors:
+	* Default parameters
+	* Overloading
+	* Sanity checks (legal value checks)
+{{{cpp
+struct Student {
+	...
+	Student(int assns = 0, int mt = 0, int final = 0);
+	...
+};
+
+Student jane{70, 80); // 70, 80, 0
+Student newkid; // 0, 0, 0
+}}}
+		* *Note*: Every class comes with a default (zero argument) constructor
+			* Default-constructs all fields *that are objects*
+			* `Vec v;` calls default constructor
+				* Since `Vec` only has `int` types, it does nothing
+			* But the built-in default constructor goes away if you write any constructor
+			* *Example*:
+{{{cpp
+struct Vec {
+	int x, y;
+	Vec(int x, int y) {
+		this->x = x;
+		this->y = y;
+	}
+};
+
+Vec v; // DOES NOT COMPILE, no default constructor
+Vec v{1, 2}; // Still works
+}}}
+		* What if a `struct` contains constants or references?
+			* Both need to be initialized!
+{{{cpp
+struct MyStruct {
+	const int myconst;
+	int &myRef;
+}
+}}}
+
+			* Bad idea:
+{{{cpp
+int z;
+struct MyStruct {
+	const int myConst = 5;
+	int &myRef = z;
+};
+}}}
+				* Does *every* instance of `MyStruct` need to have the same value of `myConst`, etc.?
+				* *Example*:
+{{{cpp
+struct Student {
+	const int id; // constant (doesn't change) but is not the same for all students
+	...
+};
+}}}
+				* Where do we initialize?
+					* Constructor body? Too late -- fields must be fully constructed by then
+					* To answer this, we must ask:
+					* What happens when an object is created?
+						1. Space is allocated
+						2. Fields are constructed in declaration order (constructors run for fields that are objects)
+						3. Constructor body runs
+					* Since step 3 is too late and step 1 isn't possible, we must put our initializations in step 2
+						* *Member Initialization List (MIL)*
+{{{cpp
+Student::Student(int id, int assns, int mt, int final):
+	id{id}, assns{assns}, mt{mt}, final{final} { }
+}}}
+							* Variables outside of braces are fields, variables inside are parameters
+							* Can initialize *any* field this way (good practice), not just constants and references
+							* Fields are *always* initialized in *declaration order*, even if MIL orders them differently
+							* Any expression (like a function call) is valid inside of the braces
+							* MIL is sometimes more efficient than setting fields in the body
+								* *Example*:
+{{{cpp
+struct Student {
+	string name;
+	...
+};
+}}}
+								* (Otherwise you run the default constructor in step 2 and then reassign in step 3)
+								* *Embrace the MIL*
+					* What if a field is initialized inline *AND* in the MIL?
+{{{cpp
+struct Vec {
+	int x = 0, y = 0;
+	vec(int x): x{x}
+};
+}}}
+						* MIL takes precedence, inline field construction is only performed if the field is not mentioned in MIL.
+	* Copy constructor
+{{{cpp
+Student billy {70, 80, 90};
+Student bobby = billy;
+}}}
+		* For creating one object as a copy of another
+		* *Note*: Every class comes with:
+			* Default constructor - default constructs all fields *that are objects*, lost if you write any constructor
+			* Copy constructor - copies all fields
+			* Copy assignment operator
+			* Destructor
+			* Move constructor
+			* Move assignment operator
+		* Building your own copy constructor:
+{{{cpp
+struct Student {
+	int assns, mt, final;
+	...
+	Student(const Student &other): assns{other.assns}, mt{other.mt}, final{other.final} // Building a student from another student
+	{...} // Equivalent to built-in copy constructor
+};
+}}}
+			* When is the built-in copy constructor not correct?
+			* Consider:
+{{{cpp
+struct Node {
+	int data;
+	Node *next;
+}; // built-in copy constructor
+
+Node *n = new Node {1, new Node {2, new Node {3, nullptr}}};
+Node m = *n;
+Node *p = new Node {*n}; // Both call copy constructor
+}}}
+| Memory | Stack                     | Heap                                      |
+|--------|---------------------------|-------------------------------------------|
+|        | n [ ]                     | -------> [1 [] -]--->[2 [] -]--->[3 [] /] |
+|        | m [1]-------------------- | ---------------^                          |
+|        | p [ ]-------> [1 [] -]--- | ---------------^                          |
+		
+		* Simple copy of fields implies only the first node is actually copied (*shallow copy*)
+		* If you want a *deep copy* (copies the whole list), must write your own copy constructor
+{{{cpp
+struct Node {
+	...
+	Node(const Node &other): data{other.data},
+	next { other.next ? new Node {*other.next} : nullptr} {}
+	// new Node {*other.next} recursively copies the rest of the list
+}}}
+			* The copy constructor is called:
+				1. When an object is initialized by another object of the same type
+				2. When an object is passed by value 
+				3. When an object is returned by value from a function
+					* (For now, this will change soon)
+			* Why do we pass by reference instead by value?
+				* Passing by value will try to make a copy, which is a circular definition
+	* *Note*: Be careful with constructors that can take *one* parameter
+		* *Example*:
+{{{cpp
+struct Node {
+	...
+	Node(int data): data {data}, next {nullputr} {}
+};
+}}}
+		* Single argument constructors create implicit conversions
+			* `Node n{4};`
+			* `Node n = 4;` is also legal, however
+				* Implicit conversion from `int` to `Node` (also done with `string s = "string"`, right part is C-style string
+{{{cpp
+int f(Node n);
+f(4); // Works -- 4 is implicitly converted to Node
+}}}
+				* Danger comes from accidentally passing an `int` to a function expecting a `Node`
+					* Silent conversion
+					* Compiler doesn't signal an error
+					* Potential errors not caught
+				* How can we disable the implicit conversion? We need to make the constructor explicit with the `explicit` keyword
+{{{cpp
+struct Node {
+	explicit Node(int data): data {data}, next {nullptr} {}
+};
+
+Node n{4}; // OK
+Node n = 4; // Error
+f(4); // Error
+f(Node{4}); // OK
+}}}
+
+== Destructors ==
+
+* When an object is destroyed, 
+	* Stack-allocated: goes out of scope
+	* Heap-allocated: when object is deleted
+		1. Destructor body runs (classes come with a *destructor*)
+		2. Fields' destructors are invoked in reverse declaration order (for fields that are objects)
+		3. Space is deallocated
+* When do we need to write a destructor?
+{{{cpp
+Node *np = new Node {1, new Node { 2, new Node {3, nullptr}}};
+}}}
+	* If `np` goes out of scope -- `np`, the pointer, is reclaimed (since it is stack allocated)
+		* All three `Node`s are leaked (since they are heap allocated)
+	* If we say `delete np;` -- calls `*np`'s destructor, which does nothing
+		* `np`'s pointer is freed, first item is freed, but 2 items leak
+	* Write a destructor to ensure the whole list is freed:
+{{{cpp
+struct Node {
+	...
+	~Node() { delete next; }
+};
+}}}
+		* Now, `delete np;` frees the whole list -- recursively calls `*next`'s destructor, whole list is deallocated
+			* Deleting a null pointer is safe in C++, so this causes no errors
+				* Recall: deleting `NULL` in C is safe
+
+== Copy Assignment Operator ==
+
+{{{cpp
+Student billy{70, 80, 90};
+Student jane = billy; // Copy constructor
+
+Student joey; // Default constructor
+joey = billy; // Copy, but not a construction (joey was already constructed, thus assigned from billy) -- copy assignment operator
+}}}
+
+* Copy assignment operator uses built-in implementation
+* May need to write your own (such as to prevent a shallow copy with `Node`)
+{{{cpp
+struct Node {
+	...
+	Node &operator=(const Node &other) {
+	// Return the item assigned so cascading assignment works (x = y = z = 3)
+	// No need for MIL because all fields have been constructed already -- MIL only applies to constructors
+		data = other.data;
+		delete next; // Prevent memory leak
+		next = other.next ? new Node {*other.next} : nullptr;
+		return *this;
+	} // **WRONG AND DANGEROUS**
+};
+}}}
+	* This implementation is *WRONG AND DANGEROUS*
+		* Why?
+			* `Node n{1, new Node{2, new Node{3, nullptr}}};`
+			* `n = n;` -- deletes `n` and then tries to copy `n` to `n`, leading to undefined behavior
+			* This isn't just one case:
+				* If `*p = *q;`, where both point to the same item, self-assignment occurs
+				* `a[i] = a[j];` where `i = j`, `n = m;` and `m` is a reference to `n`, etc.
+			* *When writing* `operator=`, *ALWAYS watch out for self-assignment*
+{{{cpp
+struct Node {
+	...
+	Node &operator=(const node &other) {
+		if (this == &other) return *this; // Prevent self-assigment errors
+		// The rest is the same
+		data = other.data;
+		delete next; // Prevent memory leak
+		next = other.next ? new Node {*other.next} : nullptr;
+		// If new fails, the fuction quits immediately
+		// Assignment to next won't happen
+		// next was deleted, dangling pointer -- corrupted data structure
+		return *this;
+	}
+};
+}}}

@@ -1,0 +1,69 @@
+= Intro to C++ =
+
+* Hello world in C:
+{{{c
+#include <stdio.h>
+int main() {
+	printf("Hello world\n");
+}
+}}}
+* Hello world in C++:
+{{{cpp
+#include <iostream>
+using namespace std;
+int main() {
+	cout << "Hello world" << endl;
+}
+}}}
+* Notes:
+	* `void main(){ ... }` is illegal in C++
+	* Implicit `return 0;` if not specified (`echo $?`)
+	* C version is still legal in C++
+	* Preferred C++ I/O:
+		* Header: `<iostream>`
+		* `std::cout << ___ << ___ << ___ ...;` - output
+		* `std::endl` - end of line
+		* `using namespace std;` - allows omitting `std::` prefix
+	* Compiling C++ programs:
+		* `g++ -std=c++14 -Wall program.cc -o program`
+			* `-o program` - allows specifying name of executable
+				* If omitted, titled `a.out`
+		* Using alias from A0, `g++14 program.cc -o program`
+		* `-Wall` - show all warnings from compiler
+
+* Input/Output
+	* 3 I/O Streams
+		* `cout` / `cerr` - for printing `stdout` / `stderr`
+		* `cin` - for reading `stdin`
+	* 2 I/O Operators
+		* `<<` - "put to" (output)
+		* `>>` - "get from" (input)
+		* Operator points in the direction of information flow
+			* `cerr << x`
+			* `cin >> x`
+	* *Example*: Add two numbers
+{{{cpp
+// plus.cc
+#include <iostream>
+using namespace std;
+// Note: Two preceding lines will be assumed from now on
+
+int main() {
+	int x, y;
+	cin >> x >> y;
+	cout << x + y << endl;
+}
+}}}
+		* To compile: `g++14 plus.cc -o plus`
+		* `cin` ignores whitespace - spaces/tabs/newlines/etc.
+		* Some questions:
+			1. What if input doesn't contain an integer next?
+			2. What if input integer is too large? Too small?
+			3. What if input is exhausted before we get 2 ints? (Press Ctrl+D to stop input)
+				* Statement fails
+		* If the read failed, `cin.fail()` will be true
+		* If EOF, `cin.eof()` and `cin.fail()` will be true
+			* Not until the attempted read fails!
+
+	* *Example*: Read all integers and `echo` them, once per line, to `stdout`.
+		* Stop on EOF or bad input

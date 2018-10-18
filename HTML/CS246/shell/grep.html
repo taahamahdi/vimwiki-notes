@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>grep</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Pattern Matching (grep)"><h1 id="Pattern Matching (grep)">Pattern Matching (grep)</h1></div>
+
+<ul>
+<li>
+<code>grep</code> / <code>egrep</code> - [Extended] global regular expression print
+
+<li>
+<code>egrep pattern file</code> - print every line in file that contains pattern
+
+<ul>
+<li>
+<span id="Pattern Matching (grep)-Example"></span><strong id="Example">Example</strong>: Print every line in <code>myfile</code> that contains <code>cs246</code>
+
+<ul>
+<li>
+<code>egrep cs246 myfile</code>
+
+</ul>
+<li>
+How many lines in <code>myfile</code> contain <code>cs246</code> or <code>CS246</code>?
+
+<ul>
+<li>
+<code>egrep "cs246|CS246" myfile | wc -l</code>
+
+<li>
+<code>egrep "(cs|CS)246" myfile | wc -l</code>
+
+<li>
+<code>egrep "(c|C)(s|S)246" myfile | wc -l</code> - also includes <code>cS246</code>, <code>Cs246</code>
+
+<li>
+<code>egrep "[cC][sS]246"</code> - any one character between <code>[</code> and <code>]</code>
+
+<li>
+<code>egrep "[^...]"</code> - any character <em>except</em> <code>...</code>
+
+</ul>
+<li>
+Available patterns - called <span id="Pattern Matching (grep)-regular expressions"></span><strong id="regular expressions">regular expressions</strong>
+
+<ul>
+<li>
+(different from globbing patterns)
+
+<li>
+If the pattern contains anything the shell might incorrectly parse (<code>|</code>), use quotes
+
+<li>
+Add option space: <code>[cC][sS] ?246</code>
+
+<ul>
+<li>
+<code>?</code> - 0 or 1 preceding expression (0 or 1 whitespace in this context)
+
+<li>
+<code>*</code> - 0 or more of preceding expression
+
+<ul>
+<li>
+<code>"(cs)*246"</code> - returns with <code>246</code>, <code>cs246</code>, <code>cscs246</code>, etc.
+
+</ul>
+<li>
+<code>+</code> - 1 or more of preceding expression
+
+<li>
+<code>.</code> - Any single character
+
+<li>
+<code>.*</code> - <span id="Pattern Matching (grep)-Anything"></span><strong id="Anything">Anything</strong>
+
+<ul>
+<li>
+<code>egrep "cs.*246"</code> - lines containing <code>cs</code>...(anything)...<code>246</code>
+
+</ul>
+<li>
+<code>.+</code> - anything non-blank
+
+<li>
+<code>^</code> / <code>$</code> - beginning / end of line
+
+<ul>
+<li>
+<code>"^cs246"</code> - lines that start with <code>cs246</code>
+
+<li>
+<code>"^cs246$"</code> - lines that are exactly <code>cs246</code>, nothing less
+
+</ul>
+</ul>
+</ul>
+<li>
+<span id="Pattern Matching (grep)-Example"></span><strong id="Example">Example</strong>: Lines of even length
+
+<ul>
+<li>
+<code>"^(...)*$"</code>
+
+<ul>
+<li>
+Any 2 characters, repeated any number of times
+
+<li>
+To run a <code>grep</code> search that requires the whole line, using <code>^</code> and <code>$</code> are usually necessary
+
+</ul>
+</ul>
+<li>
+<span id="Pattern Matching (grep)-Example"></span><strong id="Example">Example</strong>: Files in the current directory whose names contain exactly one "a"
+
+<ul>
+<li>
+<code>ls | egrep "^[^a]*a[^a]*$"</code>
+
+</ul>
+<li>
+<span id="Pattern Matching (grep)-Example"></span><strong id="Example">Example</strong>: All words in dictionary that start with "e" and have 5 characters
+
+<ul>
+<li>
+<code>egrep "^e....$" /usr/share/dict/words</code>
+
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

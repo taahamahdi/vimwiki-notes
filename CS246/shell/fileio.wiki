@@ -1,0 +1,67 @@
+= Files, Input, Output =
+* Shell - Interface to the OS, get OS to run programs/manage files
+	* Graphical shell - GNOME, i3, GKDE, etc. (touch/click)
+	* Command line - type commands at a prompt - more versatile
+* Bash
+* Files, Input, Output
+	* `cat` - displays contents of a file
+		* Entering just `cat` prints everything you type
+	* `cat > myfile.txt`, Ctrl + D at beginning of a line, sends end of file (EOL) signal to `cat`
+	* `command args > file` - executes command, capture output in file, instead of sending to screen
+		* Output redirection
+	* `cat -n` (prints line numbers)
+	* `cat < file` - takes input from file instead of keyboard
+	* Difference between `cat [file]` and `cat < [file]`?
+		* `cat [file]` - passes file as an argument to `cat`
+			* `cat` opens the file and displays it
+		* `cat < file` - shell opens file, sends the characters to `cat` (in place of keyboard)
+	* `cat /usr/share/dict/words`
+	* In Linux, a directory is just a special kind of file
+	* In Linux, every line of a valid test file must end with a newline character *(including the last one)*
+	* `pwd`, `ls`
+	* `wc` - gets word-count, character count of file
+	* `*.txt` - globbing pattern
+		* `*` - match any sequence of characters
+		* `cat *.txt` -> `cat myfile.txt myfile2.txt`
+		* `cat < input.txt > output.txt` copies the file
+	* Every process is attached to 3 streams
+	{{file:Images/ONENOTE_2018-09-13_22-22-02.png}}
+	* By default, `stdin` is keyboard input, while `stdout` / `stderr` is screen output
+	* Input redirection - connects `stdin` to a file (`<`)
+	* Output redirection - connects `stdout` to a file (`>`)
+	* `stderr`
+		* Separate output stream for error messages
+		* Output and error can go to separate places
+		* Prevents error messages from corrupting output formatting
+	* Also - `stdout` may be *buffered*
+		* System may wait to accumulate output before actually displaying it
+		* Sending out input flushes the buffer (displays it)
+		* `stderr` is _never_ buffered, error messages immediately
+	* Can also redirect `stderr`
+		* `program args < infile > outfile 2> errfile`
+	* Pipes
+		* Using output of one program as input of another
+		* Set 2nd program's `stdin` to 1st program's `stdout`
+		* *Example*: How many words occur in the first 20 lines of `myfile`?
+			* Tools (on the Linux commands sheet):
+				* `head -n file` - gives first `n` lines of file
+				* `wc` - counts lines, words, or characters (depending on options)
+					* `wc -w` - returns just the word count
+		* *Solution*:
+			* `head -20 myfile | wc -w`
+			* `cat myfile | head -20 | wc -w`
+		* *Example*: Suppose `words1.txt`, `words2.txt`, etc. contains lists of words, one word per file. Print a duplicate-free list of all words that occur in any of these.
+			* `uniq` - removes _adjacent_ duplicates
+				* If the entries are sorted, removes all duplicates
+			* `sort` - sorts lines
+		* *Solution*:
+			* `cat words*.txt | sort | uniq`
+	* We can use the output of one program as the argument of another
+		* *Example*: `echo "Today is $(date) and I am $(whoami)"`
+			* Shell executes `date` and `whoami` and then substitutes the result on the command line
+		* Without quotes, `echo` prints everything one by one
+			* Adding extra spaces and removing quotes (`echo      testing`) gets rid of the whitespaces (`echo` isn't whitespace-sensitive)
+		* `echo 'Today is $(date) and I am $(whoami)'`
+			* Doesn't do any substitutions, instead printing exactly what is given (no dollar expansion)
+		* Both kinds of quotes suppress glob expansion
+			* `echo "*"` == `echo '*'` -> `*`

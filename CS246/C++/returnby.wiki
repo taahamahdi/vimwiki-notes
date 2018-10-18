@@ -1,0 +1,26 @@
+= Return by Value / Pointer / Reference =
+
+{{{cpp
+Node getMeANode() {
+	Node n;
+	return n;
+}
+}}}
+	* *Expensive* - `n` is copied to caller's stack frame on `return` -- should we return a pointer instead?
+{{{cpp
+Node *getMeANode() {
+	Node n;
+	return &n;
+}
+}}}
+	* *Bad* - returns a pointer to stack allocated data, which is dead on `return`
+{{{cpp
+Node *getMeANode() {
+	Node *np = new Node;
+	return np;
+}
+}}}
+	* *Better* - `returns` a pointer to heap data, which is still alive
+		* Client has to know that it must be deleted when they're done with it
+	* Which should I pick?
+		* Return by value (first example), as it is simple and not as expensive as it looks

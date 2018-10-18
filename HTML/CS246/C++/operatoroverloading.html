@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>operatoroverloading</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Operator Overloading"><h1 id="Operator Overloading">Operator Overloading</h1></div>
+
+<ul>
+<li>
+Give meanings to C++ operators for types we create
+
+<li>
+<span id="Operator Overloading-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+struct Vec {
+	int x, y;
+};
+
+Vec operator+(const Vec &amp;v1, const Vec &amp;v2) {
+	Vec v { v1.x + v2.x, v1.y + v2.y };
+	return v;
+}
+
+Vec operator*(const int k, const Vec &amp;v) {
+	return { k * v.x, k * v.y };
+}
+</pre>
+
+<ul>
+<li>
+Allowed because compiler knows it's a <code>Vec</code> based on the return type
+
+<li>
+Problem -- <code>*</code> operator handles <code>k * v</code> but not <code>v * k</code>
+<pre cpp>
+Vec operator*(const Vec &amp;v, const int k) {
+	return k * v;
+}
+</pre>
+
+</ul>
+</ul>
+
+<div id="Operator Overloading-Special case: Overloading `&lt;&lt;` and `&gt;&gt;`"><h3 id="Special case: Overloading `&lt;&lt;` and `&gt;&gt;`">Special case: Overloading <code>&lt;&lt;</code> and <code>&gt;&gt;</code></h3></div>
+
+<ul>
+<li>
+<span id="Operator Overloading-Special case: Overloading <code>&lt;&lt;</code> and <code>&gt;&gt;</code>-Example"></span><strong id="Example">Example</strong>: Define our own structure to define custom behavior with operators
+<pre cpp>
+struct Grade {
+	int theGrade;
+};
+
+ostream &amp;operator&lt;&lt;(ostream &amp;out, const Grade &amp;g) {
+	out &lt;&lt; g.theGrade &lt;&lt; '%';
+	return out;
+}
+
+istream &amp;operator&gt;&gt;(istream &amp;in, Grade &amp;g) {
+	in &gt;&gt; g.theGrade;
+	if (g.theGrade &lt; 0) g.theGrade = 0;
+	if (g.theGrade &gt; 100) g.theGrade = 100;
+	return in;
+}
+</pre>
+
+</ul>
+
+</body>
+</html>

@@ -227,7 +227,7 @@ struct Node {
 {{{cpp
 struct Node {
 	...
-	Node(int data): data {data}, next {nullputr} {}
+	Node(int data): data {data}, next {nullptr} {}
 };
 }}}
 		* Single argument constructors create implicit conversions

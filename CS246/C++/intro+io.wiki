@@ -95,7 +95,7 @@ int main() {
 				* `21 >> 3`:
 					* 21 = 10101 in binary
 					* `21 >> 3` = 10 in binary (last 3 items are dropped) = 2
-			* However, when the left-hand side is `cin`, `>>` is the "get from" operator
+			* However, when the right shift operator is applied to a std::istream, it is known as the "extraction operator"
 			* `operator >>`:
 				* Inputs: `cin` (istream), data (several possible types)
 				* Outputs: Returns `cin` back to you (istream)

@@ -15,7 +15,7 @@
 	* [[C++/operatoroverloading|Operator Overloading]]
 	* [[C++/preprocessor|The Preprocessor]]
 	* [[C++/separatecompilation|Separate Compilation]]
-	* Classes
+	* Classes:
 		* [[C++/classes/introclasses|Introduction to Classes: Initialization and Destruction]]
 		* [[C++/classes/copyassignmentoperator|Copy Assignment Operator]]
 		* [[C++/classes/rvalues|R-values and R-value References]]
@@ -24,3 +24,9 @@
 		* [[C++/classes/objectsarray|Arrays of Objects]]
 		* [[C++/classes/constobjects|Const Objects]]
 		* [[C++/classes/static|Static Fields and Methods]]
+		* [[C++/invariants+encapsulation|Invariants and Encapsulation]]
+		* Object Oriented Programming:
+			* [[C++/OOP/composition+aggregation|Composition and Aggregation]]
+			* [[C++/OOP/inheritance|Inheritance]]
+			* [[C++/OOP/slicing+virtual|Slicing and Virtual]]
+			* [[C++/OOP/big5inheritance|Inheritance under the Big Five]]

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>slicing+virtual</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Slicing and `Virtual`"><h1 id="Slicing and `Virtual`">Slicing and <code>Virtual</code></h1></div>
+
+<ul>
+<li>
+Consider the method <code>isHeavy()</code>
+
+<ul>
+<li>
+For ordinary books, heavy if more than 200 pages
+
+<li>
+For textbooks, heavy if more than 500 pages
+
+<li>
+For comics, heavy if more than 30 pages
+<pre cpp>
+class Book {
+	...
+public:
+	bool isHeavy() const { return length &gt; 200; }
+	...
+};
+
+class Text : public Book { // Comic is implemented similarly
+public:
+	bool isHeavy() const { return length &gt; 500; }
+	...
+};
+// Assume length is protected field
+
+
+Book b { "", "", 50 };
+Comic c { "", "", 40, "" };
+std:: cout &lt;&lt; b.isHeavy()  // False
+		   &lt;&lt; c.isHeavy(); // True
+</pre>
+
+</ul>
+</ul>
+
+<ul>
+<li>
+Since inheritance means "is a",  we can do this:
+<pre cpp>
+Book b = comic { "", "", 40, "" };
+</pre>
+
+<ul>
+<li>
+Is <code>b</code> heavy? (i.e. is <code>b.isHeavy()</code> true or false?)
+
+<ul>
+<li>
+<code>b</code> is not heavy, since <code>Book::isHeavy()</code> runs
+
+<ul>
+<li>
+<code>Book b = Comic { ... };</code> tries to fit a <code>Comic</code> object where there is only space for a <code>Book</code> object
+
+<li>
+<code>Comic</code> is <span id="Slicing and <code>Virtual</code>-sliced"></span><strong id="sliced">sliced</strong> (<code>hero</code> field is sliced), and <code>Comic</code> is coerced into a <code>Book</code>
+
+<li>
+So <code>Book b = Comic { ... };</code> creates a <code>Book</code> and <code>Book::isHeavy()</code> runs
+
+</ul>
+<li>
+When accessing objects through pointers, slicing is unnecessary and does not happen
+<pre cpp>
+Comic c = { "", "", 40, "" };
+Book *pb = &amp;c;
+Comic *pc = &amp;c;
+pc-&gt;isHeavy(); // True, it is a comic
+pb-&gt;isHeavy(); // False, it is considered in scope of Book
+</pre>
+
+<li>
+Still,  <code>Book::isHeavy()</code> runs when we access <code>pb-&gt;isHeavy();</code>
+
+<ul>
+<li>
+The compiler uses the type of the pointer (or reference) to decide which <code>isHeavy()</code> to run
+
+<ul>
+<li>
+Doesn't consider actual type of object
+
+</ul>
+<li>
+The same object behaves differently depending on what type of pointer accesses it
+
+<ul>
+<li>
+Can we make <code>Comic</code> act like a <code>Comic</code> even when pointed to by a <code>Book</code> pointer?
+
+<ul>
+<li>
+<span id="Slicing and <code>Virtual</code>-Declare the method"></span><strong id="Declare the method">Declare the method</strong> <code>virtual</code>
+<pre cpp>
+class Book {
+	...
+protected:
+	int length;
+public:
+	virtual bool isHeavy() const { return length &gt; 200; }
+};
+
+class Comic: public Bool {
+	...
+public:
+	bool isHeavy() const override { return logic &gt; 30; }
+	// override isn't required but it adds protection since it warns you if there is nothing to override
+	//	i.e. you made a mistake and forgot the const
+};
+
+Comic c { _____, _____, 40, _____ };
+
+Comic *pc = &amp;c;
+Book *pb = &amp;c;
+Book &amp;rb = c;
+
+pc-&gt;isHeavy(); // True
+pb-&gt;isHeavy(); // True
+rb.isHeavy(); // True
+// Comic::isHeavy() in each case
+</pre>
+
+</ul>
+</ul>
+<li>
+Virtual methods -- choose which class' method to run based on the actual type of the object at runtime
+
+</ul>
+</ul>
+<li>
+<span id="Slicing and <code>Virtual</code>-Example"></span><strong id="Example">Example</strong>: my book collection:
+<pre cpp>
+Book *myBooks[20];
+...
+for (int i = 0; i &lt; 20; i++) {
+	cout &lt;&lt; myBooks[i]-&gt;isHeavy() &lt;&lt; endl;
+	// Uses:
+	// book.isHeavy() for books
+	// text.isHeavy() for textbooks
+	// comic.isHeavy() for comics
+}
+</pre>
+
+</ul>
+<li>
+<span id="Slicing and <code>Virtual</code>-Polymorphism"></span><strong id="Polymorphism">Polymorphism</strong> -- accommodating multiple types under one abstraction
+
+<ul>
+<li>
+<span id="Slicing and <code>Virtual</code>-DANGER"></span><strong id="DANGER">DANGER</strong> -- consider:
+<pre cpp>
+class A {
+	int x, y;
+	...
+};
+
+class B: public A {
+	int z;
+	...
+};
+
+void f(A *a) {
+	a[0] = A{6, 7};
+	a[1] = A{8, 9};
+}
+
+B myArray[2] = {{1, 2, 3}, {4, 5, 6}};
+f(myArray);
+
+// myArray [ 1 2 3 ][ 4 5 6 ]
+// myArray [6 7][8 9 ]
+</pre>
+
+<ul>
+<li>
+Objects become misaligned
+
+<li>
+<span id="Slicing and <code>Virtual</code>-Never use arrays of objects polymorphically"></span><strong id="Never use arrays of objects polymorphically">Never use arrays of objects polymorphically</strong>, use arrays of pointers instead
+
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

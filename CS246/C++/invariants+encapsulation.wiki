@@ -23,7 +23,7 @@ Node n3 { 4, &n2 };
 				* But not if the client can rearrange the underlying data
 			* Hard to reason about programs if you can't rely on invariants
 * To enforce variants, we use *encapsulation*
-	* Treat objects as black boxes -- capsules 
+	* Treat objects as black boxes -- capsules
 		* Seal away implementation
 		* Only interact via provided methods
 			* We get abstraction
@@ -64,4 +64,49 @@ class List {
 	struct Node; // private nested class -- only accessible inside class List
 	Node *theList = nullptr;
   public:
-	
+	void addToFront(int n);
+	int ith(int i);
+	~List();
+};
+}}}
+		* Only `List` can create/manipulate node objects
+		* Issue:
+			* Can't transverse the list from `Node` to `Node` as we would with a linked list
+				* Repeatedly calling `ith` to access the whole list gives O(n^2) complexity
+				* Requires a lot of typing
+					* We can use the `auto` keyword to solve this
+* `auto` keyword:
+{{{cpp
+auto x = y; // Automatically initialize x to the type of y
+}}}
+	* List clients can create iterators directly
+		* `auto it = List::Iterator {nullptr};`
+			* Basically creating our own end iterator, which works as long as the end is not of a different type
+			* This is a violation of encapsulation:
+				* How do we prevent the client from doing this?
+					* We can make the constructor private
+						* The client can't call `List::Iterator{}`
+						* However, now neither can `List`
+					* We need to give `List` privileged access to Iterator
+						* Make it a `friend`
+						* Now `List` can create iterators, but client can only create iterators by calling `begin` and `end`
+* `friend` keyword:
+	* As few `friend`s as possible
+	* Don't make a `friend` unless it can do something for you
+		* Instead, provide access to private fields with accessor/mutator methods
+			* `int getX() const { return x; }` -- accessor
+			* `int setY(int z) { y = z; }` -- mutator
+		* How can we implement `operator<<`, which needs private members `x` and `y`, without being a member?
+			* Instead of providing `getX`, `getY`, make `operator<<` a friend function
+{{{cpp
+//vec.h
+class Vec {
+	...
+	friend std::ostream &operator<<(std:ostream &out, const Vec &v);
+};
+
+//vec.cc
+ostream &operator<<(ostream &out, const Vec &v) {
+	return out << v.x << " " << v.y;
+}
+}}}

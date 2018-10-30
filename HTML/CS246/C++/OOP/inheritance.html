@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>inheritance</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Inheritance (Specialization)"><h1 id="Inheritance (Specialization)">Inheritance (Specialization)</h1></div>
+
+<ul>
+<li>
+<span id="Inheritance (Specialization)-Example"></span><strong id="Example">Example</strong>:
+
+<ul>
+<li>
+Tracking a collection of books
+<pre cpp>
+class Book {
+	string title, author;
+	int length;
+public:
+	Book(string title, string author, int length: title{title}, author{author}, length{length} {}
+};
+</pre>
+
+<li>
+For textbooks, you also want a string member called <code>topic</code>
+
+<li>
+For comic books, you also want a string member called <code>hero</code>
+<pre cpp>
+class Text {
+	string title, author, topic;
+	int length;
+public:
+	Text(string title, string author, string topic, int length):
+		title{title}, author{author}, topic{topic}, length{length} {}
+}; // Similar for Comic
+</pre>
+
+<ul>
+<li>
+You can also have a new class for each type, but this is long and disregards the relationships between the types
+
+<li>
+How can we create a linked list of a mixture of these?
+
+<ul>
+<li>
+Solution in C:
+
+<ol>
+<li>
+A <code>union</code>
+
+<ul>
+<li>
+<code>union BookTypes{Book *b, Text *t, Comic *c};</code>
+
+<li>
+Similar to a <code>struct</code>, but instead of having all three fields, only has one of them
+
+<li>
+Then, you can create an array of <code>BookTypes</code>, which can be a mixture of <code>Book</code>, <code>Text</code>, and <code>Comic</code>
+
+<li>
+<span id="Inheritance (Specialization)-Issue"></span><strong id="Issue">Issue</strong>:
+
+<ul>
+<li>
+How do you know which type it is?
+
+<li>
+Code is rather dangerous: not very type safe
+
+</ul>
+</ul>
+<li>
+An array of <code>void*</code>
+
+<ul>
+<li>
+Even worse than <code>union</code>, even less type safe
+
+</ul>
+</ol>
+<li>
+Solution in C++:
+
+<ul>
+<li>
+Inheritance
+<pre cpp>
+// Base class (superclass)
+class Book {
+	string title, author;
+	int length;
+public:
+	Book(string title, string author, int length):
+		title{title}, author{author}, length{length} {}
+};
+
+//Derived classes (subclasses)
+Class Text : public Book {
+	string topic;
+public:
+	Text(...); // constructor
+};
+
+Class Comic : public Book {
+	string hero;
+public:
+	Comic(...); // constructor
+};
+</pre>
+
+<ul>
+<li>
+Derived classes inherit fields and methods from the base class
+
+<ul>
+<li>
+<code>Text</code> and <code>Comic</code> get <code>title</code>, <code>author</code>, and <code>length</code> fields
+
+<li>
+Any methods that can be called on <code>Book</code> can be called on <code>Text</code> and <code>Comic</code>
+
+<li>
+Who can see these methods?
+
+<ul>
+<li>
+<code>title</code>, <code>author</code>, and <code>length</code> -- private in <code>Book</code> -- outsiders can't see them
+
+<li>
+Can <code>Text</code> and <code>Comic</code> see these fields? <span id="Inheritance (Specialization)-No!"></span><strong id="No!">No!</strong>
+
+<ul>
+<li>
+Even subclasses can't see them
+
+</ul>
+<li>
+How are these fields going to be initialized?
+
+<ul>
+<li>
+One might imagine:
+<pre cpp>
+Comic(string title, string author, string hero, int length):
+	title(title}, author{author}, hero{hero}, length{length} {}
+</pre>
+
+<li>
+<code>title</code>, <code>author</code>, and <code>length</code> are inaccessible to <code>Comic</code>
+
+<ul>
+<li>
+<span id="Inheritance (Specialization)-Note"></span><strong id="Note">Note</strong>: These fields are inaccessible even if they are public (MIL can only access your own fields)
+
+</ul>
+<li>
+When an object is created:
+
+<ol>
+<li>
+Space is allocated
+
+<li>
+Superclass part is constructed (NEW!)
+
+<li>
+Fields are constructed
+
+<li>
+Constructor body runs
+
+</ol>
+<li>
+Step 2 does not run since <code>Book</code> does not have a default constructor
+
+<li>
+<span id="Inheritance (Specialization)-Fix"></span><strong id="Fix">Fix</strong>: Invoke <code>Book</code>'s constructor in <code>Comic</code>'s MIL
+<pre cpp>
+Class Comic : public Book {
+	string hero;
+public:
+	Comic(string title, string author, string hero, int length):
+		Book{title, author, length}, // step 2
+		hero{hero} // step 3
+		{} // step 4
+};
+</pre>
+
+<ul>
+<li>
+If the superclass has no default constructor, subclass must invoke a superclass constructor in its MIL
+
+</ul>
+</ul>
+</ul>
+</ul>
+<li>
+Good reasons to keep superclass fields inaccessible to subclasses:
+
+<ul>
+<li>
+If you want to give the subclass acces to certain members, use <code>protected</code> visibility
+<pre cpp>
+Class Book {
+protected: // accessible only to Book and its subclasses
+	string title, author;
+	int length;
+public:
+	...
+};
+
+Class Text {
+	...
+public:
+	void addAuthor(string a) { a += a; } // this works
+};
+</pre>
+
+<li>
+However, it is not a good idea to give subclasses unlimited access to fields
+
+<li>
+Better to keep the fields private and then provided protected accessors/mutators
+
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<li>
+<span id="Inheritance (Specialization)-Inheritance relationship"></span><strong id="Inheritance relationship">Inheritance relationship</strong>: A "is a" B
+
+</ul>
+
+</body>
+</html>

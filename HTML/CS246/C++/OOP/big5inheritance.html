@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>big5inheritance</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Inheritance under the Big Five"><h1 id="Inheritance under the Big Five">Inheritance under the Big Five</h1></div>
+
+<div id="Inheritance under the Big Five-Destructors"><h2 id="Destructors">Destructors</h2></div>
+
+<pre cpp>
+class X {
+	int *a;
+	X(int n): a { new int[a] } {}
+	~X() { delete[] a; }
+};
+
+class Y: public X {
+	int *b;
+public:
+	Y(int n, int m): X{n}, b{ new int [a]; } {}
+	~Y() { delete[] b; }
+};
+
+X *myX = new Y{10, 20};
+delete myX; // LEAKS -- why?
+</pre>
+<ul>
+<li>
+Since it is pointer to type <code>X</code>, only the destructor for <code>X</code> was called -- only <code>a</code>, but not <code>b</code>, was freed
+
+<li>
+How can we ensure that deletion through superclass pointer will call the subclass destructor? We make the destructor virtual:
+<pre cpp>
+class X {
+	...
+public:
+	virtual ~X() { delete[] a; }
+};
+</pre>
+
+<ul>
+<li>
+<span id="Inheritance under the Big Five-Destructors-Always"></span><strong id="Always">Always</strong> make the destructor <code>virtual</code> in classes that are meant to have subclasses
+
+<ul>
+<li>
+Even if the destructor doesn't do anything
+
+<li>
+If a class is <span id="Inheritance under the Big Five-Destructors-not"></span><strong id="not">not</strong> meant to have subclasses, declare it <code>final</code>:
+<pre cpp>
+class Y final: public X {
+	...
+};
+</pre>
+
+<ul>
+<li>
+<code>final</code> is a contextual keyword (the other is <code>override</code>)
+
+</ul>
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

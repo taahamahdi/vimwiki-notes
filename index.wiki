@@ -1,4 +1,7 @@
 = Fall 2018 =
 
-* [[CS246/CS246|CS246]]
- %%[[CS245]]
+===  [[CS246/CS246|CS246]] ===
+
+[[https://github.com/taahamahdi/vimwiki-notes|GitHub]]
+
+,,© 2018 Taaha Mahdi,,

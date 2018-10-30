@@ -1,0 +1,118 @@
+= Slicing and `Virtual` =
+
+* Consider the method `isHeavy()`
+	* For ordinary books, heavy if more than 200 pages
+	* For textbooks, heavy if more than 500 pages
+	* For comics, heavy if more than 30 pages
+{{{cpp
+class Book {
+	...
+public:
+	bool isHeavy() const { return length > 200; }
+	...
+};
+
+class Text : public Book { // Comic is implemented similarly
+public:
+	bool isHeavy() const { return length > 500; }
+	...
+};
+// Assume length is protected field
+
+
+Book b { "", "", 50 };
+Comic c { "", "", 40, "" };
+std:: cout << b.isHeavy()  // False
+		   << c.isHeavy(); // True
+}}}
+
+* Since inheritance means "is a",  we can do this:
+{{{cpp
+Book b = comic { "", "", 40, "" };
+}}}
+	* Is `b` heavy? (i.e. is `b.isHeavy()` true or false?)
+		* `b` is not heavy, since `Book::isHeavy()` runs
+			* `Book b = Comic { ... };` tries to fit a `Comic` object where there is only space for a `Book` object
+			* `Comic` is *sliced* (`hero` field is sliced), and `Comic` is coerced into a `Book`
+			* So `Book b = Comic { ... };` creates a `Book` and `Book::isHeavy()` runs
+		* When accessing objects through pointers, slicing is unnecessary and does not happen
+{{{cpp
+Comic c = { "", "", 40, "" };
+Book *pb = &c;
+Comic *pc = &c;
+pc->isHeavy(); // True, it is a comic
+pb->isHeavy(); // False, it is considered in scope of Book
+}}}
+		* Still,  `Book::isHeavy()` runs when we access `pb->isHeavy();`
+			* The compiler uses the type of the pointer (or reference) to decide which `isHeavy()` to run
+				* Doesn't consider actual type of object
+			* The same object behaves differently depending on what type of pointer accesses it
+				* Can we make `Comic` act like a `Comic` even when pointed to by a `Book` pointer?
+					* *Declare the method* `virtual`
+{{{cpp
+class Book {
+	...
+protected:
+	int length;
+public:
+	virtual bool isHeavy() const { return length > 200; }
+};
+
+class Comic: public Bool {
+	...
+public:
+	bool isHeavy() const override { return logic > 30; }
+	// override isn't required but it adds protection since it warns you if there is nothing to override
+	//	i.e. you made a mistake and forgot the const
+};
+
+Comic c { _____, _____, 40, _____ };
+
+Comic *pc = &c;
+Book *pb = &c;
+Book &rb = c;
+
+pc->isHeavy(); // True
+pb->isHeavy(); // True
+rb.isHeavy(); // True
+// Comic::isHeavy() in each case
+}}}
+			* Virtual methods -- choose which class' method to run based on the actual type of the object at runtime
+	* *Example*: my book collection:
+{{{cpp
+Book *myBooks[20];
+...
+for (int i = 0; i < 20; i++) {
+	cout << myBooks[i]->isHeavy() << endl;
+	// Uses:
+	// book.isHeavy() for books
+	// text.isHeavy() for textbooks
+	// comic.isHeavy() for comics
+}
+}}}
+* *Polymorphism* -- accommodating multiple types under one abstraction
+	* *DANGER* -- consider:
+{{{cpp
+class A {
+	int x, y;
+	...
+};
+
+class B: public A {
+	int z;
+	...
+};
+
+void f(A *a) {
+	a[0] = A{6, 7};
+	a[1] = A{8, 9};
+}
+
+B myArray[2] = {{1, 2, 3}, {4, 5, 6}};
+f(myArray);
+
+// myArray [ 1 2 3 ][ 4 5 6 ]
+// myArray [6 7][8 9 ]
+}}}
+		* Objects become misaligned
+		* *Never use arrays of objects polymorphically*, use arrays of pointers instead

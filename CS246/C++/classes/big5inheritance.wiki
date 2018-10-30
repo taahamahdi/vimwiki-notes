@@ -1,0 +1,39 @@
+= Inheritance under the Big Five =
+
+== Destructors ==
+
+{{{cpp
+class X {
+	int *a;
+	X(int n): a { new int[a] } {}
+	~X() { delete[] a; }
+};
+
+class Y: public X {
+	int *b;
+public:
+	Y(int n, int m): X{n}, b{ new int [a]; } {}
+	~Y() { delete[] b; }
+};
+
+X *myX = new Y{10, 20};
+delete myX; // LEAKS -- why?
+}}}
+* Since it is pointer to type `X`, only the destructor for `X` was called -- only `a`, but not `b`, was freed
+* How can we ensure that deletion through superclass pointer will call the subclass destructor? We make the destructor virtual:
+{{{cpp
+class X {
+	...
+public:
+	virtual ~X() { delete[] a; }
+};
+}}}
+	* *Always* make the destructor `virtual` in classes that are meant to have subclasses
+		* Even if the destructor doesn't do anything
+		* If a class is *not* meant to have subclasses, declare it `final`:
+{{{cpp
+class Y final: public X {
+	...
+};
+}}}
+			* `final` is a contextual keyword (the other is `override`)

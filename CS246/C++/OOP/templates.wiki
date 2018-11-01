@@ -1,0 +1,12 @@
+= Templates =
+
+{{{cpp
+class List {
+	struct Node {
+		int data;
+		Node *next;
+	};
+	Node *numList;
+};
+}}}
+* What if we wanted to store something else?

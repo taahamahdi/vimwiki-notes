@@ -1,0 +1,166 @@
+= Inheritance under the Big Five =
+
+== Destructors ==
+
+{{{cpp
+class X {
+	int *a;
+	X(int n): a { new int[a] } {}
+	~X() { delete[] a; }
+};
+
+class Y: public X {
+	int *b;
+public:
+	Y(int n, int m): X{n}, b{ new int [a]; } {}
+	~Y() { delete[] b; }
+};
+
+X *myX = new Y{10, 20};
+delete myX; // LEAKS -- why?
+}}}
+* Since it is pointer to type `X`, only the destructor for `X` was called -- only `a`, but not `b`, was freed
+* How can we ensure that deletion through superclass pointer will call the subclass destructor? We make the destructor virtual:
+{{{cpp
+class X {
+	...
+public:
+	virtual ~X() { delete[] a; }
+};
+}}}
+	* *Always* make the destructor `virtual` in classes that are meant to have subclasses
+		* Even if the destructor doesn't do anything
+		* If a class is *not* meant to have subclasses, declare it `final`:
+{{{cpp
+class Y final: public X {
+	...
+};
+}}}
+			* `final` is a contextual keyword (the other is `override`)
+
+== Inheritance and Copy/Move ==
+
+{{{cpp
+class Book {
+	// Implements the Big 5
+};
+
+class Text: public Book {
+	// Does not implement copy/move operations
+};
+
+Text t { ___, ___, ___, ___ };
+Text t2 = t;
+// No copy constructor in Text (default copy constructor)
+// What happens?
+}}}
+* Compiler calls `Book`'s copy constructor
+* Compiler then goes field-by-field (i.e. default behavior) for the `Text` part
+	* It does the same for other operations
+
+* To write your own operations:
+{{{cpp
+Text::Text(const Text &other): Book{other}, topic{other.topic} {}
+// Text's copy constructor
+
+Text &Text::operator=(const Text &other) {
+	Book::operator=(other);
+	topic = other.topic;
+	return *this;
+}
+// Text's copy assignment operator
+
+Text::Text(Text &&other): Book{std::move(other)}, topic{std::move(other.topic)} {}
+// Text's move constructor
+}}}
+* *Note*: Even though `other` "points at" an r-value, `other` itself is an l-value
+* `std::move` (in `utility` library) forces an l-value `x` to be treated as an r-value, so that "move' versions of the operations run
+
+{{{cpp
+Text &Text::operator=(const Text &other) {
+	Book::operator=(std::move(other));
+	topic = std::move(other.topic);
+	return *this;
+}
+// Text's move assignment operator
+}}}
+* The operations given above are equivalent to the default -- specialize as needed for `Node`s, etc.
+
+* Now, consider:
+{{{cpp
+Text t1{...}, t2{...};
+Book *p1 = &t1, *p2 = &t2;
+}}}
+	* What if we do `*p1 = *p2`?
+		* `Book::operator=` runs instead of expected `Text::operator=`
+		* *Partial assignment* -- copies only the `Book` part
+		* (Example located in `c++/purevirt/example2`)
+	* How can we fix this?
+		* Try making `operator=` virtual
+{{{cpp
+class Book {
+	...
+public:
+	virtual Book &operator=(const Book &other);
+};
+
+class Text: public Book {
+	...
+public:
+	Text &operator=(const Text &other) override;
+	// REPLACE TEXT WITH BOOK TO COMPILE
+};
+}}}
+* *Note*: Different `return` types are allowed, but *parameter* types must be the same, or else it's not an override (and won't compile) -- violates "is a"
+* Assignment of a `Book` object to a `Text` object would be allowed
+{{{cpp
+Text t{...};
+Book b{...};
+t = b; // Uses Book to assign Text -- BAD (but compiles)
+
+Comic c{...};
+t = c; // Very bad :[
+
+// Both are examples of mixed assignment
+}}}
+* If `operator=` is non-virtual, *partial assignment* occurs through base class pointers
+* If `virtual`, we allow mixed assignment
+	* Both options are bad
+* *Recommendation*: All superclasses should be *abstract*
+	* Rewrite the `Book` hierarchy
+	* Superclass called `AbstractBook`
+		* Inherited by `NormalBook`, `Text`, and `Comic`
+{{{cpp
+class AbstractBook {
+	string title, author;
+	int length;
+protected:
+	AbstractBook operator=(const AbstractBook &other);
+public:
+	AbstractBook(...);
+	...
+	virtual ~AbstractBook() = 0;
+};
+}}}
+	* Since we need at least one pure virtual method to make the class abstract, we make the destructor virtual
+		* Doesn't actually change or do anything
+	* `protected` operator prevents assignment through bases class pointers from compiling, but the implementation is still available to subclasses
+		* `*p1 = *p2;` no longer compiles -- good
+{{{cpp
+class NormalBook: public AbstractBook {
+public:
+	NormalBook(...);
+	~NormalBook();
+	NormalBook &operator=(const NormalBook &other) {
+		AbstractBook::operator=(other);
+		return *this;
+	}
+};
+// Other classes are similar
+}}}
+		* Prevents partial and mixed assignment
+		* [1 from purevirtual] *Note*: The above code compiles but does not link -- the `virtual` destructor *MUST* be implemented, even though it is pure virtual
+			* The subclass destructor *will* call it
+{{{cpp
+AbstractBook::~AbstractBook() {}
+}}}

@@ -1,0 +1,45 @@
+== Pure Virtual Methods and Abstract Classes ==
+{{{cpp
+class Student {
+	...
+public:
+	virtual int fees() const;
+};
+}}}
+* Two kinds of students:
+	1. Regular students
+	2. Co-op students
+{{{cpp
+class Regular : public Student {
+public:
+	int fees() const override;
+	// Computes regular student fees
+};
+
+class CoOp : public Student {
+public:
+	int fees() const override;
+	// Computers co-op student fees
+};
+}}}
+* What should we put for `Student::fees`?
+	* We aren't sure because every student should be regular or co-op
+	* Can explicitly give `Student::fees` no implementation
+{{{cpp
+class Student {
+	...
+public:
+	virtual int fees() const = 0;
+	// Method has no [1] implementation
+};
+}}}
+	* `Student::fees()` is a *pure virtual method*
+		* A class with a pure virtual method cannot be instantiated
+			* `Student s;` is now illegal
+			* `Student` is an *abstract class* -- purpose is to organize subclasses
+				* Subclasses of an abstract class are also abstract unless they implement all pure virtual methods
+				* Non-abstract classes are called *concrete*
+					* `Regular`/`CoOp` are concrete classes
+				* UML:
+					* Virtual + pure virtual methods - _italics_
+					* Abstract classes - _class name in italics_

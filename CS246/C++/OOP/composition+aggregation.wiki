@@ -1,0 +1,45 @@
+= Composition =
+{{{cpp
+class Vec {
+	int x, y;
+public:
+	Vec(int x, int y): x{x}, y{y} {}
+};
+
+class Basis {
+	Vec v1, v2;
+public:
+	Basis(): v1{1,0}, v2{0,1}, {} // This is equivalent to v1{Vec{1,2}}
+};
+}}}
+
+* *Composition* -- Embedding one object (e.g. `Vec`) inside another (e.g. `Basis`)
+* *Relationship* -- A `Basis` "owns a" `Vec` (in fact, it owns two of them)
+* If A "owns a" B, typically:
+	* B has no identity outside A (no independent existence)
+	* If A is destroyed, B is destroyed
+	* If A is copied, B is copied (deep copy)
+* Implementation usually as a composition of classes
+* A ◆────────────────> B means A owns some number of B
+	* Can annotate with multiplicity and field names
+* *Example*:
+	* A car owns four wheels
+	* A wheel is part of a car
+	* Destroying the car would destroy the wheels
+	* If you copy the car, you copy the wheels
+
+= Aggregation =
+
+* Compare car parts to a car ("owns a") to car parts in a catalog
+	* The catalog contains the parts, but the parts have independent existence
+* *Relationship* -- A "has a" B
+* If A "has a" B, typically:
+	* B exists separate from its association with A
+	* If A is destroyed, B lives on
+	* If A is copied, B is not (shallow copy)
+		* Copies of A share the same B
+	* A ◇────────────────> B means A has a B
+		* Can annotate with multiplicity
+* *Example*:
+	* Parts in a catalog
+	* Ducks in a pond

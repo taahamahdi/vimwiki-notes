@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>composition+aggregation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Composition"><h1 id="Composition">Composition</h1></div>
+<pre cpp>
+class Vec {
+	int x, y;
+public:
+	Vec(int x, int y): x{x}, y{y} {}
+};
+
+class Basis {
+	Vec v1, v2;
+public:
+	Basis(): v1{1,0}, v2{0,1}, {} // This is equivalent to v1{Vec{1,2}}
+};
+</pre>
+
+<ul>
+<li>
+<span id="Composition-Composition"></span><strong id="Composition">Composition</strong> -- Embedding one object (e.g. <code>Vec</code>) inside another (e.g. <code>Basis</code>)
+
+<li>
+<span id="Composition-Relationship"></span><strong id="Relationship">Relationship</strong> -- A <code>Basis</code> "owns a" <code>Vec</code> (in fact, it owns two of them)
+
+<li>
+If A "owns a" B, typically:
+
+<ul>
+<li>
+B has no identity outside A (no independent existence)
+
+<li>
+If A is destroyed, B is destroyed
+
+<li>
+If A is copied, B is copied (deep copy)
+
+</ul>
+<li>
+Implementation usually as a composition of classes
+
+<li>
+A ◆────────────────&gt; B means A owns some number of B
+
+<ul>
+<li>
+Can annotate with multiplicity and field names
+
+</ul>
+<li>
+<span id="Composition-Example"></span><strong id="Example">Example</strong>:
+
+<ul>
+<li>
+A car owns four wheels
+
+<li>
+A wheel is part of a car
+
+<li>
+Destroying the car would destroy the wheels
+
+<li>
+If you copy the car, you copy the wheels
+
+</ul>
+</ul>
+
+<div id="Aggregation"><h1 id="Aggregation">Aggregation</h1></div>
+
+<ul>
+<li>
+Compare car parts to a car ("owns a") to car parts in a catalog
+
+<ul>
+<li>
+The catalog contains the parts, but the parts have independent existence
+
+</ul>
+<li>
+<span id="Aggregation-Relationship"></span><strong id="Relationship">Relationship</strong> -- A "has a" B
+
+<li>
+If A "has a" B, typically:
+
+<ul>
+<li>
+B exists separate from its association with A
+
+<li>
+If A is destroyed, B lives on
+
+<li>
+If A is copied, B is not (shallow copy)
+
+<ul>
+<li>
+Copies of A share the same B
+
+</ul>
+<li>
+A ◇────────────────&gt; B means A has a B
+
+<ul>
+<li>
+Can annotate with multiplicity
+
+</ul>
+</ul>
+<li>
+<span id="Aggregation-Example"></span><strong id="Example">Example</strong>:
+
+<ul>
+<li>
+Parts in a catalog
+
+<li>
+Ducks in a pond
+
+</ul>
+</ul>
+
+</body>
+</html>

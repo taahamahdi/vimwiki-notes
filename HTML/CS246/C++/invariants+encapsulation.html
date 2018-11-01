@@ -69,7 +69,7 @@ To enforce variants, we use <span id="Invariants and Encapsulation-encapsulation
 
 <ul>
 <li>
-Treat objects as black boxes -- capsules 
+Treat objects as black boxes -- capsules
 
 <ul>
 <li>
@@ -145,13 +145,138 @@ class List {
 	struct Node; // private nested class -- only accessible inside class List
 	Node *theList = nullptr;
   public:
+	void addToFront(int n);
+	int ith(int i);
+	~List();
+};
+</pre>
+
+</ul>
+</ul>
+<li>
+Only <code>List</code> can create/manipulate node objects
+
+<li>
+Issue:
+
+<ul>
+<li>
+Can't transverse the list from <code>Node</code> to <code>Node</code> as we would with a linked list
+
+<ul>
+<li>
+Repeatedly calling <code>ith</code> to access the whole list gives O(n^2) complexity
+
+<li>
+Requires a lot of typing
+
+<ul>
+<li>
+We can use the <code>auto</code> keyword to solve this
 
 </ul>
 </ul>
 </ul>
 </ul>
 </ul>
+<li>
+<code>auto</code> keyword:
+<pre cpp>
+auto x = y; // Automatically initialize x to the type of y
 </pre>
+
+<ul>
+<li>
+List clients can create iterators directly
+
+<ul>
+<li>
+<code>auto it = List::Iterator {nullptr};</code>
+
+<ul>
+<li>
+Basically creating our own end iterator, which works as long as the end is not of a different type
+
+<li>
+This is a violation of encapsulation:
+
+<ul>
+<li>
+How do we prevent the client from doing this?
+
+<ul>
+<li>
+We can make the constructor private
+
+<ul>
+<li>
+The client can't call <code>List::Iterator{}</code>
+
+<li>
+However, now neither can <code>List</code>
+
+</ul>
+<li>
+We need to give <code>List</code> privileged access to Iterator
+
+<ul>
+<li>
+Make it a <code>friend</code>
+
+<li>
+Now <code>List</code> can create iterators, but client can only create iterators by calling <code>begin</code> and <code>end</code>
+
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<li>
+<code>friend</code> keyword:
+
+<ul>
+<li>
+As few <code>friend</code>s as possible
+
+<li>
+Don't make a <code>friend</code> unless it can do something for you
+
+<ul>
+<li>
+Instead, provide access to private fields with accessor/mutator methods
+
+<ul>
+<li>
+<code>int getX() const { return x; }</code> -- accessor
+
+<li>
+<code>int setY(int z) { y = z; }</code> -- mutator
+
+</ul>
+<li>
+How can we implement <code>operator&lt;&lt;</code>, which needs private members <code>x</code> and <code>y</code>, without being a member?
+
+<ul>
+<li>
+Instead of providing <code>getX</code>, <code>getY</code>, make <code>operator&lt;&lt;</code> a friend function
+<pre cpp>
+//vec.h
+class Vec {
+	...
+	friend std::ostream &amp;operator&lt;&lt;(std:ostream &amp;out, const Vec &amp;v);
+};
+
+//vec.cc
+ostream &amp;operator&lt;&lt;(ostream &amp;out, const Vec &amp;v) {
+	return out &lt;&lt; v.x &lt;&lt; " " &lt;&lt; v.y;
+}
+</pre>
+
+</ul>
+</ul>
+</ul>
+</ul>
 
 </body>
 </html>

@@ -1,0 +1,113 @@
+= Inheritance (Specialization) =
+
+* *Example*:
+	* Tracking a collection of books
+{{{cpp
+class Book {
+	string title, author;
+	int length;
+public:
+	Book(string title, string author, int length: title{title}, author{author}, length{length} {}
+};
+}}}
+	* For textbooks, you also want a string member called `topic`
+	* For comic books, you also want a string member called `hero`
+{{{cpp
+class Text {
+	string title, author, topic;
+	int length;
+public:
+	Text(string title, string author, string topic, int length):
+		title{title}, author{author}, topic{topic}, length{length} {}
+}; // Similar for Comic
+}}}
+		* You can also have a new class for each type, but this is long and disregards the relationships between the types
+		* How can we create a linked list of a mixture of these?
+			* Solution in C:
+				1. A `union`
+					* `union BookTypes{Book *b, Text *t, Comic *c};`
+					* Similar to a `struct`, but instead of having all three fields, only has one of them
+					* Then, you can create an array of `BookTypes`, which can be a mixture of `Book`, `Text`, and `Comic`
+					* *Issue*:
+						* How do you know which type it is?
+						* Code is rather dangerous: not very type safe
+				2. An array of `void*`
+					* Even worse than `union`, even less type safe
+			* Solution in C++:
+				* Inheritance
+{{{cpp
+// Base class (superclass)
+class Book {
+	string title, author;
+	int length;
+public:
+	Book(string title, string author, int length):
+		title{title}, author{author}, length{length} {}
+};
+
+//Derived classes (subclasses)
+Class Text : public Book {
+	string topic;
+public:
+	Text(...); // constructor
+};
+
+Class Comic : public Book {
+	string hero;
+public:
+	Comic(...); // constructor
+};
+}}}
+					* Derived classes inherit fields and methods from the base class
+						* `Text` and `Comic` get `title`, `author`, and `length` fields
+						* Any methods that can be called on `Book` can be called on `Text` and `Comic`
+						* Who can see these methods?
+							* `title`, `author`, and `length` -- private in `Book` -- outsiders can't see them
+							* Can `Text` and `Comic` see these fields? *No!*
+								* Even subclasses can't see them
+							* How are these fields going to be initialized?
+								* One might imagine:
+{{{cpp
+Comic(string title, string author, string hero, int length):
+	title(title}, author{author}, hero{hero}, length{length} {}
+}}}
+								* `title`, `author`, and `length` are inaccessible to `Comic`
+									* *Note*: These fields are inaccessible even if they are public (MIL can only access your own fields)
+								* When an object is created:
+									1. Space is allocated
+									2. Superclass part is constructed (NEW!)
+									3. Fields are constructed
+									4. Constructor body runs
+								* Step 2 does not run since `Book` does not have a default constructor
+								* *Fix*: Invoke `Book`'s constructor in `Comic`'s MIL
+{{{cpp
+Class Comic : public Book {
+	string hero;
+public:
+	Comic(string title, string author, string hero, int length):
+		Book{title, author, length}, // step 2
+		hero{hero} // step 3
+		{} // step 4
+};
+}}}
+									* If the superclass has no default constructor, subclass must invoke a superclass constructor in its MIL
+					* Good reasons to keep superclass fields inaccessible to subclasses:
+						* If you want to give the subclass acces to certain members, use `protected` visibility
+{{{cpp
+Class Book {
+protected: // accessible only to Book and its subclasses
+	string title, author;
+	int length;
+public:
+	...
+};
+
+Class Text {
+	...
+public:
+	void addAuthor(string a) { a += a; } // this works
+};
+}}}
+						* However, it is not a good idea to give subclasses unlimited access to fields
+						* Better to keep the fields private and then provided protected accessors/mutators
+* *Inheritance relationship*: A "is a" B

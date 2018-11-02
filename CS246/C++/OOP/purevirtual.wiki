@@ -1,4 +1,4 @@
-== Pure Virtual Methods and Abstract Classes ==
+= Pure Virtual Methods and Abstract Classes =
 {{{cpp
 class Student {
 	...

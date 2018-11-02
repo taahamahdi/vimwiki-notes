@@ -67,5 +67,206 @@ class Y final: public X {
 </ul>
 </ul>
 
+<div id="Inheritance under the Big Five-Inheritance and Copy/Move"><h2 id="Inheritance and Copy/Move">Inheritance and Copy/Move</h2></div>
+
+<pre cpp>
+class Book {
+	// Implements the Big 5
+};
+ class Text: public Book {
+	// Does not implement copy/move operations
+};
+ Text t { ___, ___, ___, ___ };
+Text t2 = t;
+// No copy constructor in Text (default copy constructor)
+// What happens?
+</pre>
+<ul>
+<li>
+Compiler calls <code>Book</code>'s copy constructor
+
+<li>
+Compiler then goes field-by-field (i.e. default behavior) for the <code>Text</code> part
+
+<ul>
+<li>
+It does the same for other operations
+
+</ul>
+<li>
+To write your own operations:
+<pre cpp>
+Text::Text(const Text &amp;other): Book{other}, topic{other.topic} {}
+// Text's copy constructor
+ Text &amp;Text::operator=(const Text &amp;other) {
+	Book::operator=(other);
+	topic = other.topic;
+	return *this;
+}
+// Text's copy assignment operator
+ Text::Text(Text &amp;&amp;other): Book{std::move(other)}, topic{std::move(other.topic)} {}
+// Text's move constructor
+</pre>
+
+<li>
+<span id="Inheritance under the Big Five-Inheritance and Copy/Move-Note"></span><strong id="Note">Note</strong>: Even though <code>other</code> "points at" an r-value, <code>other</code> itself is an l-value
+
+<li>
+<code>std::move</code> (in <code>utility</code> library) forces an l-value <code>x</code> to be treated as an r-value, so that "move' versions of the operations run
+<pre cpp>
+Text &amp;Text::operator=(const Text &amp;other) {
+	Book::operator=(std::move(other));
+	topic = std::move(other.topic);
+	return *this;
+}
+// Text's move assignment operator
+</pre>
+
+<li>
+The operations given above are equivalent to the default -- specialize as needed for <code>Node</code>s, etc.
+
+<ul>
+<li>
+Now, consider:
+<pre cpp>
+Text t1{...}, t2{...};
+Book *p1 = &amp;t1, *p2 = &amp;t2;
+</pre>
+
+<ul>
+<li>
+What if we do <code>*p1 = *p2</code>?
+
+<ul>
+<li>
+<code>Book::operator=</code> runs instead of expected <code>Text::operator=</code>
+
+<li>
+<span id="Inheritance under the Big Five-Inheritance and Copy/Move-Partial assignment"></span><strong id="Partial assignment">Partial assignment</strong> -- copies only the <code>Book</code> part
+
+<li>
+(Example located in <code>c++/purevirt/example2</code>)
+
+</ul>
+<li>
+How can we fix this?
+
+<ul>
+<li>
+Try making <code>operator=</code> virtual
+<pre cpp>
+class Book {
+	...
+public:
+	virtual Book &amp;operator=(const Book &amp;other);
+};
+ class Text: public Book {
+	...
+public:
+	Text &amp;operator=(const Text &amp;other) override;
+	// REPLACE TEXT WITH BOOK TO COMPILE
+};
+</pre>
+
+</ul>
+</ul>
+</ul>
+<li>
+<span id="Inheritance under the Big Five-Inheritance and Copy/Move-Note"></span><strong id="Note">Note</strong>: Different <code>return</code> types are allowed, but <span id="Inheritance under the Big Five-Inheritance and Copy/Move-parameter"></span><strong id="parameter">parameter</strong> types must be the same, or else it's not an override (and won't compile) -- violates "is a"
+
+<li>
+Assignment of a <code>Book</code> object to a <code>Text</code> object would be allowed
+<pre cpp>
+Text t{...};
+Book b{...};
+t = b; // Uses Book to assign Text -- BAD (but compiles)
+ Comic c{...};
+t = c; // Very bad :[
+ // Both are examples of mixed assignment
+</pre>
+
+<li>
+If <code>operator=</code> is non-virtual, <span id="Inheritance under the Big Five-Inheritance and Copy/Move-partial assignment"></span><strong id="partial assignment">partial assignment</strong> occurs through base class pointers
+
+<li>
+If <code>virtual</code>, we allow mixed assignment
+
+<ul>
+<li>
+Both options are bad
+
+</ul>
+<li>
+<span id="Inheritance under the Big Five-Inheritance and Copy/Move-Recommendation"></span><strong id="Recommendation">Recommendation</strong>: All superclasses should be <span id="Inheritance under the Big Five-Inheritance and Copy/Move-abstract"></span><strong id="abstract">abstract</strong>
+
+<ul>
+<li>
+Rewrite the <code>Book</code> hierarchy
+
+<li>
+Superclass called <code>AbstractBook</code>
+
+<ul>
+<li>
+Inherited by <code>NormalBook</code>, <code>Text</code>, and <code>Comic</code>
+<pre cpp>
+class AbstractBook {
+	string title, author;
+	int length;
+protected:
+	AbstractBook operator=(const AbstractBook &amp;other);
+public:
+	AbstractBook(...);
+	...
+	virtual ~AbstractBook() = 0;
+};
+</pre>
+
+</ul>
+<li>
+Since we need at least one pure virtual method to make the class abstract, we make the destructor virtual
+
+<ul>
+<li>
+Doesn't actually change or do anything
+
+</ul>
+<li>
+<code>protected</code> operator prevents assignment through bases class pointers from compiling, but the implementation is still available to subclasses
+
+<ul>
+<li>
+<code>*p1 = *p2;</code> no longer compiles -- good
+<pre cpp>
+class NormalBook: public AbstractBook {
+public:
+	NormalBook(...);
+	~NormalBook();
+	NormalBook &amp;operator=(const NormalBook &amp;other) {
+		AbstractBook::operator=(other);
+		return *this;
+	}
+};
+// Other classes are similar
+</pre>
+
+<li>
+Prevents partial and mixed assignment
+
+<li>
+[1 from purevirtual] <span id="Inheritance under the Big Five-Inheritance and Copy/Move-Note"></span><strong id="Note">Note</strong>: The above code compiles but does not link -- the <code>virtual</code> destructor <span id="Inheritance under the Big Five-Inheritance and Copy/Move-MUST"></span><strong id="MUST">MUST</strong> be implemented, even though it is pure virtual
+
+<ul>
+<li>
+The subclass destructor <span id="Inheritance under the Big Five-Inheritance and Copy/Move-will"></span><strong id="will">will</strong> call it
+<pre cpp>
+AbstractBook::~AbstractBook() {}
+</pre>
+
+</ul>
+</ul>
+</ul>
+</ul>
+
 </body>
 </html>

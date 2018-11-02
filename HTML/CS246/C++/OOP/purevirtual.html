@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>purevirtual</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Pure Virtual Methods and Abstract Classes"><h1 id="Pure Virtual Methods and Abstract Classes">Pure Virtual Methods and Abstract Classes</h1></div>
+<pre cpp>
+class Student {
+	...
+public:
+	virtual int fees() const;
+};
+</pre>
+<ul>
+<li>
+Two kinds of students:
+
+<ol>
+<li>
+Regular students
+
+<li>
+Co-op students
+<pre cpp>
+class Regular : public Student {
+public:
+	int fees() const override;
+	// Computes regular student fees
+};
+
+class CoOp : public Student {
+public:
+	int fees() const override;
+	// Computers co-op student fees
+};
+</pre>
+
+</ol>
+<li>
+What should we put for <code>Student::fees</code>?
+
+<ul>
+<li>
+We aren't sure because every student should be regular or co-op
+
+<li>
+Can explicitly give <code>Student::fees</code> no implementation
+<pre cpp>
+class Student {
+	...
+public:
+	virtual int fees() const = 0;
+	// Method has no [1] implementation
+};
+</pre>
+
+<li>
+<code>Student::fees()</code> is a <span id="Pure Virtual Methods and Abstract Classes-pure virtual method"></span><strong id="pure virtual method">pure virtual method</strong>
+
+<ul>
+<li>
+A class with a pure virtual method cannot be instantiated
+
+<ul>
+<li>
+<code>Student s;</code> is now illegal
+
+<li>
+<code>Student</code> is an <span id="Pure Virtual Methods and Abstract Classes-abstract class"></span><strong id="abstract class">abstract class</strong> -- purpose is to organize subclasses
+
+<ul>
+<li>
+Subclasses of an abstract class are also abstract unless they implement all pure virtual methods
+
+<li>
+Non-abstract classes are called <span id="Pure Virtual Methods and Abstract Classes-concrete"></span><strong id="concrete">concrete</strong>
+
+<ul>
+<li>
+<code>Regular</code>/<code>CoOp</code> are concrete classes
+
+</ul>
+<li>
+UML:
+
+<ul>
+<li>
+Virtual + pure virtual methods - <em>italics</em>
+
+<li>
+Abstract classes - <em>class name in italics</em>
+
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

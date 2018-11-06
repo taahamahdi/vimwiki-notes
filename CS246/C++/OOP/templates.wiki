@@ -10,3 +10,47 @@ class List {
 };
 }}}
 * What if we wanted to store something else?
+* *Template* - class parameter: set by a type
+{{{cpp
+template <typename T> class Stack {
+	int , exp;
+	T *contents;
+public:
+	Stack() {...}
+	void push(T x) {...}
+	T top() {...}
+	void pop() {...}
+}
+
+
+template<typename T> class List {
+	struct Node {
+		T data;
+		Node *next;
+	};
+	Node *myList;
+public:
+	class Iterator {
+	...
+	public:
+		T &operator*() {...}
+		...
+	};
+	T &ik(int i) {...}
+	void addToFront(T n);
+	...
+}
+
+// Client
+
+List<int> l1;
+List<List<int>> l2;
+l1.addToFront(3);
+l2.addToFront(l2);
+
+for IList<int>::Iterator it = l1.begin(); it != lt.end(); it++) {
+	cout << *it << endl;
+}
+}}}
+	* Compiler specializes template at the source code level, before compilation
+	* When writing template, everything goes in the header file

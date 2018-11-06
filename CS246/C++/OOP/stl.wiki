@@ -1,0 +1,121 @@
+= The Standard Template Library (STL) =
+
+* Large number of useful templates
+* *Example*: Dynamic length arrays -- use a `vector`
+{{{cpp
+#include <vector>
+std::vector<int> v {4,5}; // 4, 5
+v.emplaceBack(6); // 4, 5, 6
+v.emplaceBack(7); // 4, 5, 6, 7
+}}}
+	* *Note*:
+		* `vector<int> v(4,5);` -- Initializes `v` to `5 5 5 5`
+	* Looping over vectors:
+{{{cpp
+for (int i = 0; i < v.size(); i++) {
+	cout << v[i] << endl;
+}
+
+for (vector<int>::iterator it = v.begin(); it != v.end(); it++) {
+	cout << *it << endl;
+}
+
+for (auto n: v) {
+	cout << n << endl;
+	// Double check this
+}
+
+// To iterate in reverse
+
+for (vector<int>::reverse_iterator it = v.rbegin(); it != v.rend(); it++) {...}
+// Replace vector<int>::reverse_iterator with auto
+}}}
+
+	* `v.pop.back()` -- removes last item
+* Use iterators to remove items from inside a vector:
+{{{cpp
+auto it = v.erase(v.begin()); // Erases element 0
+it = v.erase(v.begin() + 3); // Erases element 3 (4th)
+// Returns an iterator to the first item after the erase
+it = v.erase(it);
+// Removes second item from same spot
+it = v.erase(v.end() - 1);
+}}}
+* `v[i]` returns the `i`th value of `v`
+	* Unchecked -- going out of bounds is undefined behavior
+	* Use `v.at(i)` -- checked version of `v[i]`
+		* What happens when going out of bounds?
+			* *Problem*: `vector`'s code can detect the error, but doesn't know what to do about it
+			* The client can respond, but can't detect the error
+			* *C solution* -- functions return a status code, or set a global variable `errno`
+				* Tends to lead to awkward programming
+				* Encourages programmers to ignore errors
+			* *C++ solution*
+				* When an error condition arises, the function *raises an exception*
+					* By default, execution stops
+					* We can write *handlers* to *catch* exceptions and deal with them
+					* `vector<T>: at` raises an exception `std::out_of_range` when it fails
+					* We can handle it as follows:
+{{{cpp
+#include <stdexcept>
+...
+try {
+	cout << v.at(10000); // Statements that may raise go in a try block
+	...
+	// Things to do on success
+}
+catch (out_of_range r) {
+	// out_of_range is the type -- in a class
+	// r is the object
+	cerr << "Range error" << r.what() << endl;
+}
+
+cout << "Done" << endl;
+// Program has recovered and keeps going
+}}}
+* Now consider:
+{{{cpp
+void f() {
+	// Need to call constructor to create out_of_range object
+	throw out_of_range { "I AM ERROR" };
+	// The object is what .what() will produce
+}
+
+void g() { f(); }
+
+void h() { g(); }
+
+int main() {
+	try {
+		h();
+	}
+	catch(out_of_range) {...}
+}	
+}}}
+	* What happens?
+		* `main` calls `h`
+		* `h` calls `g`
+		* `g` calls `f`
+		* `f` throws
+		* Control goes back through its call chain (*unwinds* the stack) until a handler is found
+			* All the way back to `main`, and `main` handles the exception
+			* If no matching handler is found => program terminates
+* A handler can do part of the recovery job, i.e. execute _some_ corrective code (or throw another error)
+{{{cpp
+try {...}
+catch(SomeErrorType s) {
+	...
+	throw SomeOtherError {...};
+}
+
+// Can also throw same exception
+try {...}
+catch (SomeErrorType s) {
+	...
+	throw;
+	// Throws same error as the one caught
+}
+}}}
+* `throw` vs. `throw s`
+	* `throw s` throws a new exception of type `SomeErrorType` (sliced copy of `s`)
+	* `throw` -- actual type of `s` is retained

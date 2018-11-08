@@ -56,6 +56,7 @@ it = v.erase(v.end() - 1);
 					* We can write *handlers* to *catch* exceptions and deal with them
 					* `vector<T>: at` raises an exception `std::out_of_range` when it fails
 					* We can handle it as follows:
+== Exceptions ==
 {{{cpp
 #include <stdexcept>
 ...
@@ -119,3 +120,23 @@ catch (SomeErrorType s) {
 * `throw` vs. `throw s`
 	* `throw s` throws a new exception of type `SomeErrorType` (sliced copy of `s`)
 	* `throw` -- actual type of `s` is retained
+* A handler can act as a catch-all:
+{{{cpp
+try {___}
+catch(...) { // Actually type '...' -- catches all exceptions
+	// ____
+}
+}}}
+	* You can throw anything you want -- don't have to throw objects
+		* Exceptions are slow -- use them sparingly
+	* You can write your own exception classes:
+{{{cpp
+class BadInput{};
+...
+throw BadInput{};
+}}}
+* When `new` fails, throws `std::bad_alloc`
+	* *NEVER* let a destructor throw an exception
+		* Program will stop _immediately_
+		* If you want to let a destructor throw, tag it with `noexcept(false)`
+			* If a destructor is running during stack unwinding while dealing with another exception, and it throws, there are now *two* active, unhandled exceptions, and the program will abort *immediately*

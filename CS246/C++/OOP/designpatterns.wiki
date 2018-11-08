@@ -1,0 +1,178 @@
+= Design Patterns =
+
+== Observer Pattern ==
+
+* Publish/subscribe model
+	* One class: publisher/subject -- generates data
+	* >= 1 subscriber/observer classes -- receive data and react to it
+	* *Example*: Subject -- spreadsheet cells, Observer -- graph
+		* When cells change, the graph updates
+		* Can be many different kinds of observer objects -- subject should not need to know all the details
+		* Observer pattern:
+| _Subject_           |
+| + notifyObservers() |
+| + attatch(observer) |
+| + detatch(observer) |
+ -- Code common for all subjects
+ -- Open diamond pointing from Subject to Observer
+
+| Concrete Subject |
+| + getState()     |
+ -- Open arrow pointing from ConcreteSubject to Subject
+
+| _Observer_ |
+| + notify() |
+-- Interface common to all observers
+-- Independent to the Subject
+
+| Concrete Observer |
+| + notify()        |
+Open arrow pointing from ConcreteObserver to Observer
+-- Open diamond pointing from Concrete Observer to Concrete Subject
+
+* Sequence of method calls
+	1. Subject's state is updated
+	2. `Subject::notifyObservers()` -- Calls every observer's `notify()`
+	3. Each observer calls `ConcreteSubject::getState()` to query the state and react accordingly
+
+* *Example*: Horse races
+	* Subject -- Publishes winners
+	* Observers -- Individual bettors -- declare victory when their horse wins
+{{{cpp
+class Subject {
+	vector<Observer*> observers;
+public:
+	void attach(Observer *ob) { observers.emplace_back(ob); }
+	void detatch(Observer *ob); // Remove from observers -- lookup
+	void notifyObservers() { for (auto &ob:observers) ob->notify(); }
+	virtual ~Subject() = 0;
+};
+
+Subject::~Subject() {}
+
+class Observer {
+public:
+	virtual void notify() = 0;
+	virtual ~Observer() {}
+};
+
+class HorseRace: public Subject { // Concrete subject
+	ifstream in; // Source of data
+	string lastwinner;
+public:
+	HorseRace(string source): in{source} {}
+	bool runRace() {
+		in >> lastwinner;
+		return in;
+	} // Returns false at EOF
+	string getState() { return lastwinner; }
+};
+
+class Bettor: public Observer { // Concrete observer
+	HorseRace *subject;
+	string name, myHorse;
+public:
+	Bettor(___): _____ {
+		Subject->attach(this);
+	}
+	~Bettor() { Subject->attatch(this); }
+	// Don't delete Subject -- we don't own it
+	void notify() {
+		string winner = subject->getState();
+		if (winner == myHorse) cout << "Win!";
+		else cout << ":[";
+	}
+};
+
+// main.cc
+
+HorseRace hr;
+Bettor Larry(&hr, "Larry", "RunsLikeACow");
+// ...(other bettors)
+while(hr.runRace()) {
+	hr.notifyObservers();
+}
+}}}
+
+== Decorator Pattern ==
+
+* Want to add/remove functionality to/from an object at runtime
+* *Example*: Windowing system
+	* Start with basic window
+	* Add a scrollbar
+	* Add a menu
+	* Want to choose these enhancements at runtime
+		* UML:
+ -- Window Interface
+| _Component_   |
+| + operation() |
+
+ -- Basic Window
+| ConcreteComponent |
+| + operation()     |
+
+| _Decorator_ |
+ -- Open arrow pointing from Decorator and ConcreteComponent to Component
+
+| Concrete Decorator A |
+| operation()          |
+ -- With menu
+
+| Concrete Decorator B |
+| operation()          |
+ -- With scrollbar
+ -- Open arrow pointing from Concrete Decorator A/B to Decorator
+
+	* Component -- interface -- operations your objects will provide
+	* Concrete Component -- implements the interface -- basic object
+	* Decorators -- inherit from _Decorator_, which inherits from _Component_
+		* Every Decorator *is* a component and *has* a component
+		* Window with a scrollbar *is* a window and *has* a pointer to the underlying plain window
+		* Window with a scrollbar and a menu *is* a window and *has* a pointer to the window with a scrollbar, which *has* a pointer to a window
+		* All inherit from Abstract Window, so Window methods can be used polymorphically on all of them
+* *Example*: Pizza
+
+| _Pizza_ |
+
+| Crust and Sauce |
+ -- Basic pizza
+ -- Open arrow pointing from Crust and Sauce to Pizza
+
+| _Decorator_ |
+ -- Open diamond from Decorator pointing to Pizza
+
+| Topping |
+
+| Stuffed Crust |
+
+| Dipping Sauce |
+ -- Topping, Stuffed Crust, Dipping Sauce all point to Decorator with open arrow
+
+{{{cpp
+class Pizza {
+public:
+	virtual float price() const = 0;
+	virtual string desc() const = 0;
+	virtual ~Pizza() {}
+};
+
+class CrustAndSauce: public Pizza {
+public:
+	float price() const override { return 5.99; }
+	string desc() const override { "Pizza"; }
+};
+
+class Decorator: public Pizza {
+protected:
+	Pizza *component;
+public:
+	Decorator(Pizza *p): component{p} {}
+	virtual ~Decorator() { delete component; }
+	// Destroying the topping destroys the pizza
+};
+
+class StuffedCrust: public Pizza {
+public:
+	float price() { return component->price() + 2.69; }
+	string desc() { return component->desc() + " with stuffed crust"; }
+};

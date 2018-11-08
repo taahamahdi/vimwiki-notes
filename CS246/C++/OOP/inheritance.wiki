@@ -92,7 +92,7 @@ public:
 }}}
 									* If the superclass has no default constructor, subclass must invoke a superclass constructor in its MIL
 					* Good reasons to keep superclass fields inaccessible to subclasses:
-						* If you want to give the subclass acces to certain members, use `protected` visibility
+						* If you want to give the subclass access to certain members, use `protected` visibility
 {{{cpp
 Class Book {
 protected: // accessible only to Book and its subclasses
@@ -109,5 +109,5 @@ public:
 };
 }}}
 						* However, it is not a good idea to give subclasses unlimited access to fields
-						* Better to keep the fields private and then provided protected accessors/mutators
+						* Better to keep the fields private and then provide protected accessors/mutators
 * *Inheritance relationship*: A "is a" B

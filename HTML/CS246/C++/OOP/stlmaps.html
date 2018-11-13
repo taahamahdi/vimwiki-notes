@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>stlmaps</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="STL Maps"><h1 id="STL Maps">STL Maps</h1></div>
+
+<ul>
+<li>
+<span id="STL Maps-Used for creating dictionaries"></span><strong id="Used for creating dictionaries">Used for creating dictionaries</strong>
+
+<li>
+<span id="STL Maps-Example"></span><strong id="Example">Example</strong>: "Arrays" that map <code>string</code>s to <code>int</code>s
+<pre cpp>
+#include &lt;map&gt;
+#include &lt;string&gt;
+
+std::map&lt;string, int&gt; m;
+
+m["abc"] = 1;
+m["def"] = 4;
+cout &lt;&lt; m["ghi"] // Prints 0
+	 &lt;&lt; m["def"]; // Prints 4
+</pre>
+
+<ul>
+<li>
+If the key is not present, it is inserted, and the value is default constructed
+
+<ul>
+<li>
+For <code>int</code>s, that means <code>0</code>
+
+</ul>
+</ul>
+<li>
+<code>m.erase("abc");</code> -- Remove from <code>map</code>
+
+<li>
+Finding a key:
+<pre cpp>
+if (m.count("abc")) {}
+// Since keys are unique:
+// 0 -- not found
+// 1 -- found
+// multimap allows multiple instances of same key
+</pre>
+
+<li>
+Iterating over a <code>map</code> -&gt; Items come back in "sorted key order" -- implemented by balanced binary search tree
+<pre cpp>
+for(auto &amp;p: m) {
+	cout &lt;&lt; p.first &lt;&lt; " " &lt;&lt; p.second &lt;&lt; endl;
+	// p is of type std::pair&lt;string, int&gt;
+	// In #include &lt;utility&gt;
+}
+</pre>
+
+<ul>
+<li>
+<code>p.first</code> and <code>p.second</code> are public fields, not methods -- backend as <code>struct</code>, not <code>class</code>
+
+</ul>
+</ul>
+
+</body>
+</html>

@@ -34,3 +34,4 @@
 			* [[C++/templates|Templates]]
 			* [[C++/stl|The Standard Template Library]]
 			* [[C++/OOP/designpatterns|Design Patterns]]
+			* [[C++/OOP/stlmaps|STL Maps]]

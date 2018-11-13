@@ -422,5 +422,415 @@ public:
 };
 </pre>
 
+<div id="Design Patterns-Factory Method Pattern"><h2 id="Factory Method Pattern">Factory Method Pattern</h2></div>
+<ul>
+<li>
+<span id="Design Patterns-Factory Method Pattern-Example"></span><strong id="Example">Example</strong>: Write a video game with 2 kinds of enemies: turtles and bullets
+
+<ul>
+<li>
+Randomly send turtles and bullets
+
+<li>
+Bullets are more frequent in harder levels
+
+</ul>
+</ul>
+
+<table>
+<tr>
+<td>
+<em>Enemy</em>
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Turtle
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Bullet
+</td>
+</tr>
+</table>
+<p>
+-- Open arrow from Turtle and Bullet to <em>Enemy</em>
+</p>
+
+<table>
+<tr>
+<td>
+<em>Level</em>
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Easy
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Hard
+</td>
+</tr>
+</table>
+<p>
+-- Open arrow from Easy and Hard to <em>Level</em>
+</p>
+
+<ul>
+<li>
+Never know exactly which enemy comes next, so can't call turtle/bullet constructors directly
+
+<ul>
+<li>
+Instead, put a factory method in Level that creates enemies
+
+</ul>
+</ul>
+
+<pre cpp>
+class Level {
+public:
+	virtual Enemy *createEnemy() = 0;
+	// Factory method
+};
+
+class Easy: public Level {
+public:
+	Enemy *createEnemy() override {
+		// Create mostly turtles
+	}
+};
+
+class Hard: public Level {
+public:
+	Enemy *createEnemy() override {
+		// Create mostly bullets
+	}
+};
+
+// In client
+Level *l = ...;
+Enemy *e = l-&gt;createEnemy();
+</pre>
+
+<div id="Design Patterns-Template Method Pattern"><h2 id="Template Method Pattern">Template Method Pattern</h2></div>
+
+<ul>
+<li>
+Want subclasses to override superclass behavior, but some aspects must stay the same
+
+<ul>
+<li>
+<span id="Design Patterns-Template Method Pattern-Example cont."></span><strong id="Example cont.">Example cont.</strong>: There are red turtles and green turtles
+
+</ul>
+</ul>
+
+<pre cpp>
+class Turtle {
+public:
+	void draw() {
+		drawHead();
+		drawShell();
+		drawFeet();
+	}
+private:
+	void drawHead() { ... }
+	void drawFeet() { ... }
+	virtual void drawShell() = 0;
+};
+
+class RedTurtle: public Turtle {
+	void drawShell() override {
+		// Draw red shell
+	}
+};
+
+class GreenTurtle: public Turtle {
+	void drawShell() override {
+		// Draw green shell
+	}
+};
+</pre>
+<ul>
+<li>
+Subclasses can't change the way a <code>Turtle</code> is drawn (i.e. head, shell, feet), but can change the way a shell is drawn
+
+<li>
+<span id="Design Patterns-Template Method Pattern-Generalization"></span><strong id="Generalization">Generalization</strong>: the Non-Virtual Interface (NVI) idiom
+
+<ul>
+<li>
+A public virtual method is really two things:
+
+<ol>
+<li>
+<code>public</code> -- An interface to the client
+
+<ul>
+<li>
+Must indicate some provided behaviour with pre/post conditions
+
+</ul>
+<li>
+<code>virtual</code> -- An interface to subclasses
+
+<ul>
+<li>
+A hook to insert specialized behavior
+
+</ul>
+</ol>
+<li>
+These two ideas are contradictory -- hard to separate them if they're tied to the same function
+
+<ul>
+<li>
+What if you want to split a <code>virtual</code> method into two, maybe with constant code in between?
+
+<ul>
+<li>
+Also changes client's interface
+
+<li>
+How can you make sure overriding functions confirm to pre-imposed conditions?
+
+</ul>
+</ul>
+<li>
+NVI says all <code>public</code> methods should be non-virtual
+
+<ul>
+<li>
+<span id="Design Patterns-Template Method Pattern-All"></span><strong id="All">All</strong> virtual methods should be <code>private</code> (or at least <code>protected</code>)
+
+<ul>
+<li>
+Exception -- the destructor -- should always be <code>public</code>
+
+</ul>
+<li>
+<span id="Design Patterns-Template Method Pattern-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+// Non-NVI
+class DigitalMedia {
+public:
+	virtual void play() = 0;
+};
+
+// NVI
+class DigitalMedia {
+public:
+	void play() {
+		doPlay(); // Virtual helper
+	}
+private:
+	virtual void doPlay() = 0;
+};
+</pre>
+
+<ul>
+<li>
+Possible to add before/after code
+
+<li>
+<span id="Design Patterns-Template Method Pattern-Example cont."></span><strong id="Example cont.">Example cont.</strong>:
+
+<ul>
+<li>
+Check copyright of file before -- only play if no copyright
+
+<li>
+Update play count of song after
+
+</ul>
+</ul>
+<li>
+Generalizes Template Method -- puts <span id="Design Patterns-Template Method Pattern-every"></span><strong id="every">every</strong> virtual function inside a template method
+
+</ul>
+</ul>
+</ul>
+
+<div id="Design Patterns-Visitor Pattern"><h2 id="Visitor Pattern">Visitor Pattern</h2></div>
+
+<ul>
+<li>
+For implementing <span id="Design Patterns-Visitor Pattern-double dispatch"></span><strong id="double dispatch">double dispatch</strong>
+
+<ul>
+<li>
+<code>virtual</code> method -- Chosen based on the actual type (at runtime) of the receiving object
+
+<li>
+What if you want to choose based on <span id="Design Patterns-Visitor Pattern-two"></span><strong id="two">two</strong> objects?
+
+<li>
+<span id="Design Patterns-Visitor Pattern-Example"></span><strong id="Example">Example</strong>: Striking enemies with weapons:
+
+</ul>
+</ul>
+
+<table>
+<tr>
+<td>
+<em>Enemy</em>
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Turtle
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Bullet
+</td>
+</tr>
+</table>
+<p>
+-- Turtle and Bullet point to <em>Enemy</em> with open arrow
+</p>
+
+<table>
+<tr>
+<td>
+<em>Weapon</em>
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Rock
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Strike
+</td>
+</tr>
+</table>
+<p>
+-- Rock and Strike point to <em>Weapon</em> with open arrow
+</p>
+
+<ul>
+<li>
+Potential implementation:
+<pre cpp>
+virtual void(Enemy, Weapon)::strike();
+// NOT POSSIBLE
+</pre>
+
+<ul>
+<li>
+If <code>strike</code> is a method of <em>Enemy</em> (respectively <em>Weapon</em>), choose based on <em>Enemy</em> (respectively <em>Weapon</em>), but not on <em>Weapon</em> (respectively <em>Enemy</em>)
+
+<li>
+Trick to get dispatch on both (double dispatch) combined <span id="Design Patterns-Visitor Pattern-overriding"></span><strong id="overriding">overriding</strong> with <span id="Design Patterns-Visitor Pattern-overloading"></span><strong id="overloading">overloading</strong>
+<pre cpp>
+class Enemy {
+public:
+	virtual void beStruckBy(Weapon &amp;w) = 0;
+};
+
+class Turtle: public Enemy {
+public:
+	void beStruckBy(Weapon &amp;w) override { w.strike(*this); }
+	// *this is a Turtle
+};
+
+class Bullet: public Enemy {
+public:
+	void beStruckBy(Weapon &amp;w) override { w.strike(*this); }
+	// *this is a Bullet
+};
+// NOT THE SAME -- STRIKE COULD BE DIFFERENT
+
+class Weapon {
+public:
+	virtual void strike(Turtle &amp;t) = 0;
+	virtual void strike(Bullet &amp;b) = 0; // Both are overloads
+};
+
+class Stick: public Weapon {
+public:
+	void strike(Turle &amp;t) override {
+		// Strike Turtle with stick
+	}
+	
+	void strike(Bullet &amp;b) override {
+		// Strike Bullet with stick
+	}
+};
+
+// class Rock is similar
+
+Enemy *e = new Bullet { ... };
+Weapon *w = new Rock { ... };
+
+e-&gt;beStruckBy(*w); // What happens?
+</pre>
+
+<li>
+<code>Bullet::beStruckBy</code> runs (virtual method)
+
+<li>
+Calls <code>Weapon::strike(*this)</code>, <code>*this</code> is <code>Bullet</code>
+
+<li>
+Therefore <code>Bullet</code> version was chosen at compile time
+
+<li>
+<code>virtual</code> method call resolved to <code>Rock::strike(Bullet &amp;b)</code>
+
+<li>
+Visitor can be used to add functionality to existing classes, without changing or recompiling the classes themselves
+
+<li>
+<span id="Design Patterns-Visitor Pattern-Example"></span><strong id="Example">Example</strong>: Add a visitor to the <code>Book</code> hierarchy from earlier:
+<pre cpp>
+class Book {
+public:
+	...
+	virtual void accept(BookVisitor &amp;v) { v.visit(*this); }
+};
+
+class Text: public Book {
+public:
+	...
+	void accept(BookVisitor &amp;v) { v.visit(*this); }
+};
+</pre>
+
+</ul>
+</ul>
+
 </body>
 </html>

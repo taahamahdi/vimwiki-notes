@@ -177,3 +177,212 @@ public:
 	float price() { return component->price() + 2.69; }
 	string desc() { return component->desc() + " with stuffed crust"; }
 };
+}}}
+
+== Factory Method Pattern ==
+* *Example*: Write a video game with 2 kinds of enemies: turtles and bullets
+	* Randomly send turtles and bullets
+	* Bullets are more frequent in harder levels
+
+| _Enemy_ |
+
+| Turtle |
+
+| Bullet |
+-- Open arrow from Turtle and Bullet to _Enemy_
+
+| _Level_ |
+
+| Easy |
+
+| Hard |
+-- Open arrow from Easy and Hard to _Level_
+
+* Never know exactly which enemy comes next, so can't call turtle/bullet constructors directly
+	* Instead, put a factory method in Level that creates enemies
+
+{{{cpp
+class Level {
+public:
+	virtual Enemy *createEnemy() = 0;
+	// Factory method
+};
+
+class Easy: public Level {
+public:
+	Enemy *createEnemy() override {
+		// Create mostly turtles
+	}
+};
+
+class Hard: public Level {
+public:
+	Enemy *createEnemy() override {
+		// Create mostly bullets
+	}
+};
+
+// In client
+Level *l = ...;
+Enemy *e = l->createEnemy();
+}}}
+
+== Template Method Pattern ==
+
+* Want subclasses to override superclass behavior, but some aspects must stay the same
+	* *Example cont.*: There are red turtles and green turtles
+
+{{{cpp
+class Turtle {
+public:
+	void draw() {
+		drawHead();
+		drawShell();
+		drawFeet();
+	}
+private:
+	void drawHead() { ... }
+	void drawFeet() { ... }
+	virtual void drawShell() = 0;
+};
+
+class RedTurtle: public Turtle {
+	void drawShell() override {
+		// Draw red shell
+	}
+};
+
+class GreenTurtle: public Turtle {
+	void drawShell() override {
+		// Draw green shell
+	}
+};
+}}}
+	* Subclasses can't change the way a `Turtle` is drawn (i.e. head, shell, feet), but can change the way a shell is drawn
+	* *Generalization*: the Non-Virtual Interface (NVI) idiom
+		* A public virtual method is really two things:
+			1. `public` -- An interface to the client
+				* Must indicate some provided behaviour with pre/post conditions
+			2. `virtual` -- An interface to subclasses
+				* A hook to insert specialized behavior
+		* These two ideas are contradictory -- hard to separate them if they're tied to the same function
+			* What if you want to split a `virtual` method into two, maybe with constant code in between?
+				* Also changes client's interface
+				* How can you make sure overriding functions confirm to pre-imposed conditions?
+		* NVI says all `public` methods should be non-virtual
+			* *All* virtual methods should be `private` (or at least `protected`)
+				* Exception -- the destructor -- should always be `public`
+			* *Example*:
+{{{cpp
+// Non-NVI
+class DigitalMedia {
+public:
+	virtual void play() = 0;
+};
+
+// NVI
+class DigitalMedia {
+public:
+	void play() {
+		doPlay(); // Virtual helper
+	}
+private:
+	virtual void doPlay() = 0;
+};
+}}}
+				* Possible to add before/after code
+				* *Example cont.*:
+					* Check copyright of file before -- only play if no copyright
+					* Update play count of song after
+			* Generalizes Template Method -- puts *every* virtual function inside a template method
+
+== Visitor Pattern ==
+
+* For implementing *double dispatch*
+	* `virtual` method -- Chosen based on the actual type (at runtime) of the receiving object
+	* What if you want to choose based on *two* objects?
+	* *Example*: Striking enemies with weapons:
+
+| _Enemy_ |
+
+| Turtle |
+
+| Bullet |
+-- Turtle and Bullet point to _Enemy_ with open arrow
+
+| _Weapon_ |
+
+| Rock |
+
+| Strike |
+-- Rock and Strike point to _Weapon_ with open arrow
+
+	* Potential implementation:
+{{{cpp
+virtual void(Enemy, Weapon)::strike();
+// NOT POSSIBLE
+}}}
+		* If `strike` is a method of _Enemy_ (respectively _Weapon_), choose based on _Enemy_ (respectively _Weapon_), but not on _Weapon_ (respectively _Enemy_)
+		* Trick to get dispatch on both (double dispatch) combined *overriding* with *overloading*
+{{{cpp
+class Enemy {
+public:
+	virtual void beStruckBy(Weapon &w) = 0;
+};
+
+class Turtle: public Enemy {
+public:
+	void beStruckBy(Weapon &w) override { w.strike(*this); }
+	// *this is a Turtle
+};
+
+class Bullet: public Enemy {
+public:
+	void beStruckBy(Weapon &w) override { w.strike(*this); }
+	// *this is a Bullet
+};
+// NOT THE SAME -- STRIKE COULD BE DIFFERENT
+
+class Weapon {
+public:
+	virtual void strike(Turtle &t) = 0;
+	virtual void strike(Bullet &b) = 0; // Both are overloads
+};
+
+class Stick: public Weapon {
+public:
+	void strike(Turle &t) override {
+		// Strike Turtle with stick
+	}
+	
+	void strike(Bullet &b) override {
+		// Strike Bullet with stick
+	}
+};
+
+// class Rock is similar
+
+Enemy *e = new Bullet { ... };
+Weapon *w = new Rock { ... };
+
+e->beStruckBy(*w); // What happens?
+}}}
+		* `Bullet::beStruckBy` runs (virtual method)
+		* Calls `Weapon::strike(*this)`, `*this` is `Bullet`
+		* Therefore `Bullet` version was chosen at compile time
+		* `virtual` method call resolved to `Rock::strike(Bullet &b)`
+		* Visitor can be used to add functionality to existing classes, without changing or recompiling the classes themselves
+		* *Example*: Add a visitor to the `Book` hierarchy from earlier:
+{{{cpp
+class Book {
+public:
+	...
+	virtual void accept(BookVisitor &v) { v.visit(*this); }
+};
+
+class Text: public Book {
+public:
+	...
+	void accept(BookVisitor &v) { v.visit(*this); }
+};
+}}}

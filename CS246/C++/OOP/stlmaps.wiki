@@ -1,0 +1,35 @@
+= STL Maps =
+
+* *Used for creating dictionaries*
+* *Example*: "Arrays" that map `string`s to `int`s
+{{{cpp
+#include <map>
+#include <string>
+
+std::map<string, int> m;
+
+m["abc"] = 1;
+m["def"] = 4;
+cout << m["ghi"] // Prints 0
+	 << m["def"]; // Prints 4
+}}}
+	* If the key is not present, it is inserted, and the value is default constructed
+		* For `int`s, that means `0`
+* `m.erase("abc");` -- Remove from `map`
+* Finding a key:
+{{{cpp
+if (m.count("abc")) {}
+// Since keys are unique:
+// 0 -- not found
+// 1 -- found
+// multimap allows multiple instances of same key
+}}}
+* Iterating over a `map` -> Items come back in "sorted key order" -- implemented by balanced binary search tree
+{{{cpp
+for(auto &p: m) {
+	cout << p.first << " " << p.second << endl;
+	// p is of type std::pair<string, int>
+	// In #include <utility>
+}
+}}}
+	* `p.first` and `p.second` are public fields, not methods -- backend as `struct`, not `class`

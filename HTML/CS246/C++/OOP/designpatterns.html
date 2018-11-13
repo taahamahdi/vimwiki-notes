@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>designpatterns</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Design Patterns"><h1 id="Design Patterns">Design Patterns</h1></div>
+
+<div id="Design Patterns-Observer Pattern"><h2 id="Observer Pattern">Observer Pattern</h2></div>
+
+<ul>
+<li>
+Publish/subscribe model
+
+<ul>
+<li>
+One class: publisher/subject -- generates data
+
+<li>
+&gt;= 1 subscriber/observer classes -- receive data and react to it
+
+<li>
+<span id="Design Patterns-Observer Pattern-Example"></span><strong id="Example">Example</strong>: Subject -- spreadsheet cells, Observer -- graph
+
+<ul>
+<li>
+When cells change, the graph updates
+
+<li>
+Can be many different kinds of observer objects -- subject should not need to know all the details
+
+<li>
+Observer pattern:
+
+</ul>
+</ul>
+</ul>
+
+<table>
+<tr>
+<td>
+<em>Subject</em>
+</td>
+</tr>
+<tr>
+<td>
++ notifyObservers()
+</td>
+</tr>
+<tr>
+<td>
++ attatch(observer)
+</td>
+</tr>
+<tr>
+<td>
++ detatch(observer)
+</td>
+</tr>
+</table>
+<p>
+-- Code common for all subjects
+-- Open diamond pointing from Subject to Observer
+</p>
+
+<table>
+<tr>
+<td>
+Concrete Subject
+</td>
+</tr>
+<tr>
+<td>
++ getState()
+</td>
+</tr>
+</table>
+<p>
+-- Open arrow pointing from ConcreteSubject to Subject
+</p>
+
+<table>
+<tr>
+<td>
+<em>Observer</em>
+</td>
+</tr>
+<tr>
+<td>
++ notify()
+</td>
+</tr>
+</table>
+<p>
+-- Interface common to all observers
+-- Independent to the Subject
+</p>
+
+<table>
+<tr>
+<td>
+Concrete Observer
+</td>
+</tr>
+<tr>
+<td>
++ notify()
+</td>
+</tr>
+</table>
+<p>
+-- Open arrow pointing from ConcreteObserver to Observer
+-- Open diamond pointing from Concrete Observer to Concrete Subject
+</p>
+
+<ul>
+<li>
+Sequence of method calls
+
+<ol>
+<li>
+Subject's state is updated
+
+<li>
+<code>Subject::notifyObservers()</code> -- Calls every observer's <code>notify()</code>
+
+<li>
+Each observer calls <code>ConcreteSubject::getState()</code> to query the state and react accordingly
+
+</ol>
+</ul>
+
+<ul>
+<li>
+<span id="Design Patterns-Observer Pattern-Example"></span><strong id="Example">Example</strong>: Horse races
+
+<ul>
+<li>
+Subject -- Publishes winners
+
+<li>
+Observers -- Individual bettors -- declare victory when their horse wins
+<pre cpp>
+class Subject {
+	vector&lt;Observer*&gt; observers;
+public:
+	void attach(Observer *ob) { observers.emplace_back(ob); }
+	void detatch(Observer *ob); // Remove from observers -- lookup
+	void notifyObservers() { for (auto &amp;ob:observers) ob-&gt;notify(); }
+	virtual ~Subject() = 0;
+};
+
+Subject::~Subject() {}
+
+class Observer {
+public:
+	virtual void notify() = 0;
+	virtual ~Observer() {}
+};
+
+class HorseRace: public Subject { // Concrete subject
+	ifstream in; // Source of data
+	string lastwinner;
+public:
+	HorseRace(string source): in{source} {}
+	bool runRace() {
+		in &gt;&gt; lastwinner;
+		return in;
+	} // Returns false at EOF
+	string getState() { return lastwinner; }
+};
+
+class Bettor: public Observer { // Concrete observer
+	HorseRace *subject;
+	string name, myHorse;
+public:
+	Bettor(___): _____ {
+		Subject-&gt;attach(this);
+	}
+	~Bettor() { Subject-&gt;attatch(this); }
+	// Don't delete Subject -- we don't own it
+	void notify() {
+		string winner = subject-&gt;getState();
+		if (winner == myHorse) cout &lt;&lt; "Win!";
+		else cout &lt;&lt; ":[";
+	}
+};
+
+// main.cc
+
+HorseRace hr;
+Bettor Larry(&amp;hr, "Larry", "RunsLikeACow");
+// ...(other bettors)
+while(hr.runRace()) {
+	hr.notifyObservers();
+}
+</pre>
+
+</ul>
+</ul>
+
+<div id="Design Patterns-Decorator Pattern"><h2 id="Decorator Pattern">Decorator Pattern</h2></div>
+
+<ul>
+<li>
+Want to add/remove functionality to/from an object at runtime
+
+<li>
+<span id="Design Patterns-Decorator Pattern-Example"></span><strong id="Example">Example</strong>: Windowing system
+
+<ul>
+<li>
+Start with basic window
+
+<li>
+Add a scrollbar
+
+<li>
+Add a menu
+
+<li>
+Want to choose these enhancements at runtime
+
+</ul>
+<li>
+UML:
+
+</ul>
+<p>
+-- Window Interface
+<table>
+<tr>
+<td>
+<em>Component</em>
+</td>
+</tr>
+<tr>
+<td>
++ operation()
+</td>
+</tr>
+</table>
+</p>
+
+<p>
+-- Basic Window
+<table>
+<tr>
+<td>
+ConcreteComponent
+</td>
+</tr>
+<tr>
+<td>
++ operation()
+</td>
+</tr>
+</table>
+</p>
+
+<table>
+<tr>
+<td>
+<em>Decorator</em>
+</td>
+</tr>
+</table>
+<p>
+-- Open arrow pointing from Decorator and ConcreteComponent to Component
+</p>
+
+<table>
+<tr>
+<td>
+Concrete Decorator A
+</td>
+</tr>
+<tr>
+<td>
+operation()
+</td>
+</tr>
+</table>
+<p>
+-- With menu
+</p>
+
+<table>
+<tr>
+<td>
+Concrete Decorator B
+</td>
+</tr>
+<tr>
+<td>
+operation()
+</td>
+</tr>
+</table>
+<p>
+-- With scrollbar
+-- Open arrow pointing from Concrete Decorator A/B to Decorator
+</p>
+
+<ul>
+<li>
+Component -- interface -- operations your objects will provide
+
+<li>
+Concrete Component -- implements the interface -- basic object
+
+<li>
+Decorators -- inherit from <em>Decorator</em>, which inherits from <em>Component</em>
+
+<ul>
+<li>
+Every Decorator <span id="Design Patterns-Decorator Pattern-is"></span><strong id="is">is</strong> a component and <span id="Design Patterns-Decorator Pattern-has"></span><strong id="has">has</strong> a component
+
+<li>
+Window with a scrollbar <span id="Design Patterns-Decorator Pattern-is"></span><strong id="is">is</strong> a window and <span id="Design Patterns-Decorator Pattern-has"></span><strong id="has">has</strong> a pointer to the underlying plain window
+
+<li>
+Window with a scrollbar and a menu <span id="Design Patterns-Decorator Pattern-is"></span><strong id="is">is</strong> a window and <span id="Design Patterns-Decorator Pattern-has"></span><strong id="has">has</strong> a pointer to the window with a scrollbar, which <span id="Design Patterns-Decorator Pattern-has"></span><strong id="has">has</strong> a pointer to a window
+
+<li>
+All inherit from Abstract Window, so Window methods can be used polymorphically on all of them
+
+</ul>
+</ul>
+<li>
+<span id="Design Patterns-Decorator Pattern-Example"></span><strong id="Example">Example</strong>: Pizza
+
+
+<table>
+<tr>
+<td>
+<em>Pizza</em>
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Crust and Sauce
+</td>
+</tr>
+</table>
+<p>
+-- Basic pizza
+-- Open arrow pointing from Crust and Sauce to Pizza
+</p>
+
+<table>
+<tr>
+<td>
+<em>Decorator</em>
+</td>
+</tr>
+</table>
+<p>
+-- Open diamond from Decorator pointing to Pizza
+</p>
+
+<table>
+<tr>
+<td>
+Topping
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Stuffed Crust
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td>
+Dipping Sauce
+</td>
+</tr>
+</table>
+<p>
+ -- Topping, Stuffed Crust, Dipping Sauce all point to Decorator with open arrow
+</p>
+
+<pre cpp>
+class Pizza {
+public:
+	virtual float price() const = 0;
+	virtual string desc() const = 0;
+	virtual ~Pizza() {}
+};
+
+class CrustAndSauce: public Pizza {
+public:
+	float price() const override { return 5.99; }
+	string desc() const override { "Pizza"; }
+};
+
+class Decorator: public Pizza {
+protected:
+	Pizza *component;
+public:
+	Decorator(Pizza *p): component{p} {}
+	virtual ~Decorator() { delete component; }
+	// Destroying the topping destroys the pizza
+};
+
+class StuffedCrust: public Decorator {
+public:
+	float price() { return component-&gt;price() + 2.69; }
+	string desc() { return component-&gt;desc() + " with stuffed crust"; }
+};
+</pre>
+
+</body>
+</html>

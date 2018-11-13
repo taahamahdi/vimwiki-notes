@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>templates</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Templates"><h1 id="Templates">Templates</h1></div>
+
+<pre cpp>
+class List {
+	struct Node {
+		int data;
+		Node *next;
+	};
+	Node *numList;
+};
+</pre>
+<ul>
+<li>
+What if we wanted to store something else?
+
+<li>
+<span id="Templates-Template"></span><strong id="Template">Template</strong> - class parameter: set by a type
+<pre cpp>
+template &lt;typename T&gt; class Stack {
+	int , exp;
+	T *contents;
+public:
+	Stack() {...}
+	void push(T x) {...}
+	T top() {...}
+	void pop() {...}
+}
+
+
+template&lt;typename T&gt; class List {
+	struct Node {
+		T data;
+		Node *next;
+	};
+	Node *myList;
+public:
+	class Iterator {
+	...
+	public:
+		T &amp;operator*() {...}
+		...
+	};
+	T &amp;ik(int i) {...}
+	void addToFront(T n);
+	...
+}
+
+// Client
+
+List&lt;int&gt; l1;
+List&lt;List&lt;int&gt;&gt; l2;
+l1.addToFront(3);
+l2.addToFront(l2);
+
+for IList&lt;int&gt;::Iterator it = l1.begin(); it != lt.end(); it++) {
+	cout &lt;&lt; *it &lt;&lt; endl;
+}
+</pre>
+
+<ul>
+<li>
+Compiler specializes template at the source code level, before compilation
+
+<li>
+When writing template, everything goes in the header file
+
+</ul>
+</ul>
+
+</body>
+</html>

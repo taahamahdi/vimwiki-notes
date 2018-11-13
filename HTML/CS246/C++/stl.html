@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>stl</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="The Standard Template Library (STL)"><h1 id="The Standard Template Library (STL)">The Standard Template Library (STL)</h1></div>
+
+<ul>
+<li>
+Large number of useful templates
+
+<li>
+<span id="The Standard Template Library (STL)-Example"></span><strong id="Example">Example</strong>: Dynamic length arrays -- use a <code>vector</code>
+<pre cpp>
+#include &lt;vector&gt;
+std::vector&lt;int&gt; v {4,5}; // 4, 5
+v.emplaceBack(6); // 4, 5, 6
+v.emplaceBack(7); // 4, 5, 6, 7
+</pre>
+
+<ul>
+<li>
+<span id="The Standard Template Library (STL)-Note"></span><strong id="Note">Note</strong>:
+
+<ul>
+<li>
+<code>vector&lt;int&gt; v(4,5);</code> -- Initializes <code>v</code> to <code>5 5 5 5</code>
+
+</ul>
+<li>
+Looping over vectors:
+<pre cpp>
+for (int i = 0; i &lt; v.size(); i++) {
+	cout &lt;&lt; v[i] &lt;&lt; endl;
+}
+
+for (vector&lt;int&gt;::iterator it = v.begin(); it != v.end(); it++) {
+	cout &lt;&lt; *it &lt;&lt; endl;
+}
+
+for (auto n: v) {
+	cout &lt;&lt; n &lt;&lt; endl;
+	// Double check this
+}
+
+// To iterate in reverse
+
+for (vector&lt;int&gt;::reverse_iterator it = v.rbegin(); it != v.rend(); it++) {...}
+// Replace vector&lt;int&gt;::reverse_iterator with auto
+</pre>
+
+</ul>
+</ul>
+
+<ul>
+<li>
+<code>v.pop.back()</code> -- removes last item
+
+</ul>
+<li>
+Use iterators to remove items from inside a vector:
+<pre cpp>
+auto it = v.erase(v.begin()); // Erases element 0
+it = v.erase(v.begin() + 3); // Erases element 3 (4th)
+// Returns an iterator to the first item after the erase
+it = v.erase(it);
+// Removes second item from same spot
+it = v.erase(v.end() - 1);
+</pre>
+
+<li>
+<code>v[i]</code> returns the <code>i</code>th value of <code>v</code>
+
+<ul>
+<li>
+Unchecked -- going out of bounds is undefined behavior
+
+<li>
+Use <code>v.at(i)</code> -- checked version of <code>v[i]</code>
+
+<ul>
+<li>
+What happens when going out of bounds?
+
+<ul>
+<li>
+<span id="The Standard Template Library (STL)-Problem"></span><strong id="Problem">Problem</strong>: <code>vector</code>'s code can detect the error, but doesn't know what to do about it
+
+<li>
+The client can respond, but can't detect the error
+
+<li>
+<span id="The Standard Template Library (STL)-C solution"></span><strong id="C solution">C solution</strong> -- functions return a status code, or set a global variable <code>errno</code>
+
+<ul>
+<li>
+Tends to lead to awkward programming
+
+<li>
+Encourages programmers to ignore errors
+
+</ul>
+<li>
+<span id="The Standard Template Library (STL)-C++ solution"></span><strong id="C++ solution">C++ solution</strong>
+
+<ul>
+<li>
+When an error condition arises, the function <span id="The Standard Template Library (STL)-raises an exception"></span><strong id="raises an exception">raises an exception</strong>
+
+<ul>
+<li>
+By default, execution stops
+
+<li>
+We can write <span id="The Standard Template Library (STL)-handlers"></span><strong id="handlers">handlers</strong> to <span id="The Standard Template Library (STL)-catch"></span><strong id="catch">catch</strong> exceptions and deal with them
+
+<li>
+<code>vector&lt;T&gt;: at</code> raises an exception <code>std::out_of_range</code> when it fails
+
+<li>
+We can handle it as follows:
+
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<div id="The Standard Template Library (STL)-Exceptions"><h2 id="Exceptions">Exceptions</h2></div>
+<pre cpp>
+#include &lt;stdexcept&gt;
+...
+try {
+	cout &lt;&lt; v.at(10000); // Statements that may raise go in a try block
+	...
+	// Things to do on success
+}
+catch (out_of_range r) {
+	// out_of_range is the type -- in a class
+	// r is the object
+	cerr &lt;&lt; "Range error" &lt;&lt; r.what() &lt;&lt; endl;
+}
+
+cout &lt;&lt; "Done" &lt;&lt; endl;
+// Program has recovered and keeps going
+</pre>
+<ul>
+<li>
+Now consider:
+<pre cpp>
+void f() {
+	// Need to call constructor to create out_of_range object
+	throw out_of_range { "I AM ERROR" };
+	// The object is what .what() will produce
+}
+
+void g() { f(); }
+
+void h() { g(); }
+
+int main() {
+	try {
+		h();
+	}
+	catch(out_of_range) {...}
+}	
+</pre>
+
+<ul>
+<li>
+What happens?
+
+<ul>
+<li>
+<code>main</code> calls <code>h</code>
+
+<li>
+<code>h</code> calls <code>g</code>
+
+<li>
+<code>g</code> calls <code>f</code>
+
+<li>
+<code>f</code> throws
+
+<li>
+Control goes back through its call chain (<span id="The Standard Template Library (STL)-Exceptions-unwinds"></span><strong id="unwinds">unwinds</strong> the stack) until a handler is found
+
+<ul>
+<li>
+All the way back to <code>main</code>, and <code>main</code> handles the exception
+
+<li>
+If no matching handler is found =&gt; program terminates
+
+</ul>
+</ul>
+</ul>
+<li>
+A handler can do part of the recovery job, i.e. execute <em>some</em> corrective code (or throw another error)
+<pre cpp>
+try {...}
+catch(SomeErrorType s) {
+	...
+	throw SomeOtherError {...};
+}
+
+// Can also throw same exception
+try {...}
+catch (SomeErrorType s) {
+	...
+	throw;
+	// Throws same error as the one caught
+}
+</pre>
+
+<li>
+<code>throw</code> vs. <code>throw s</code>
+
+<ul>
+<li>
+<code>throw s</code> throws a new exception of type <code>SomeErrorType</code> (sliced copy of <code>s</code>)
+
+<li>
+<code>throw</code> -- actual type of <code>s</code> is retained
+
+</ul>
+<li>
+A handler can act as a catch-all:
+<pre cpp>
+try {___}
+catch(...) { // Actually type '...' -- catches all exceptions
+	// ____
+}
+</pre>
+
+<ul>
+<li>
+You can throw anything you want -- don't have to throw objects
+
+<ul>
+<li>
+Exceptions are slow -- use them sparingly
+
+</ul>
+<li>
+You can write your own exception classes:
+<pre cpp>
+class BadInput{};
+...
+throw BadInput{};
+</pre>
+
+</ul>
+<li>
+When <code>new</code> fails, throws <code>std::bad_alloc</code>
+
+<ul>
+<li>
+<span id="The Standard Template Library (STL)-Exceptions-NEVER"></span><strong id="NEVER">NEVER</strong> let a destructor throw an exception
+
+<ul>
+<li>
+Program will stop <em>immediately</em>
+
+<li>
+If you want to let a destructor throw, tag it with <code>noexcept(false)</code>
+
+<ul>
+<li>
+If a destructor is running during stack unwinding while dealing with another exception, and it throws, there are now <span id="The Standard Template Library (STL)-Exceptions-two"></span><strong id="two">two</strong> active, unhandled exceptions, and the program will abort <span id="The Standard Template Library (STL)-Exceptions-immediately"></span><strong id="immediately">immediately</strong>
+
+</ul>
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

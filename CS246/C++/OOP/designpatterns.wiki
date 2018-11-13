@@ -9,16 +9,17 @@
 		* When cells change, the graph updates
 		* Can be many different kinds of observer objects -- subject should not need to know all the details
 		* Observer pattern:
+
 | _Subject_           |
 | + notifyObservers() |
 | + attatch(observer) |
 | + detatch(observer) |
- -- Code common for all subjects
- -- Open diamond pointing from Subject to Observer
+-- Code common for all subjects
+-- Open diamond pointing from Subject to Observer
 
 | Concrete Subject |
 | + getState()     |
- -- Open arrow pointing from ConcreteSubject to Subject
+-- Open arrow pointing from ConcreteSubject to Subject
 
 | _Observer_ |
 | + notify() |
@@ -27,7 +28,7 @@
 
 | Concrete Observer |
 | + notify()        |
-Open arrow pointing from ConcreteObserver to Observer
+-- Open arrow pointing from ConcreteObserver to Observer
 -- Open diamond pointing from Concrete Observer to Concrete Subject
 
 * Sequence of method calls
@@ -102,26 +103,26 @@ while(hr.runRace()) {
 	* Add a scrollbar
 	* Add a menu
 	* Want to choose these enhancements at runtime
-		* UML:
- -- Window Interface
+* UML:
+-- Window Interface
 | _Component_   |
 | + operation() |
 
- -- Basic Window
+-- Basic Window
 | ConcreteComponent |
 | + operation()     |
 
 | _Decorator_ |
- -- Open arrow pointing from Decorator and ConcreteComponent to Component
+-- Open arrow pointing from Decorator and ConcreteComponent to Component
 
 | Concrete Decorator A |
 | operation()          |
- -- With menu
+-- With menu
 
 | Concrete Decorator B |
 | operation()          |
- -- With scrollbar
- -- Open arrow pointing from Concrete Decorator A/B to Decorator
+-- With scrollbar
+-- Open arrow pointing from Concrete Decorator A/B to Decorator
 
 	* Component -- interface -- operations your objects will provide
 	* Concrete Component -- implements the interface -- basic object
@@ -135,11 +136,11 @@ while(hr.runRace()) {
 | _Pizza_ |
 
 | Crust and Sauce |
- -- Basic pizza
- -- Open arrow pointing from Crust and Sauce to Pizza
+-- Basic pizza
+-- Open arrow pointing from Crust and Sauce to Pizza
 
 | _Decorator_ |
- -- Open diamond from Decorator pointing to Pizza
+-- Open diamond from Decorator pointing to Pizza
 
 | Topping |
 
@@ -171,7 +172,7 @@ public:
 	// Destroying the topping destroys the pizza
 };
 
-class StuffedCrust: public Pizza {
+class StuffedCrust: public Decorator {
 public:
 	float price() { return component->price() + 2.69; }
 	string desc() { return component->desc() + " with stuffed crust"; }

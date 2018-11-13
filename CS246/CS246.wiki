@@ -31,4 +31,6 @@
 			* [[C++/OOP/slicing+virtual|Slicing and Virtual]]
 			* [[C++/OOP/big5inheritance|Inheritance under the Big Five]]
 			* [[C++/OOP/purevirtual|Pure Virtual Methods and Abstract Classes]]
-			* [[C++/OOP/templates|Templates]]
+			* [[C++/templates|Templates]]
+			* [[C++/stl|The Standard Template Library]]
+			* [[C++/OOP/designpatterns|Design Patterns]]

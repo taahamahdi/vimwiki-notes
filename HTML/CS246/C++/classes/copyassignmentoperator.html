@@ -86,7 +86,7 @@ struct Node {
 Would be better to create the copy first, then delete
 <pre cpp>
 	...
-	Node &amp;operator=(const node &amp;other) {
+	Node &amp;operator=(const Node &amp;other) {
 		if (this == &amp;other) return *this;
 		Node *tmp = next;
 		next = other.next ? new Node {*other.next} : nullptr; // Copy constructor

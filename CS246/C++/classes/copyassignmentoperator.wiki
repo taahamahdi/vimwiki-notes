@@ -50,7 +50,7 @@ struct Node {
 			* Would be better to create the copy first, then delete
 {{{cpp
 	...
-	Node &operator=(const node &other) {
+	Node &operator=(const Node &other) {
 		if (this == &other) return *this;
 		Node *tmp = next;
 		next = other.next ? new Node {*other.next} : nullptr; // Copy constructor

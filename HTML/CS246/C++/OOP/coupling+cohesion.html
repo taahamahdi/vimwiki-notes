@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../../style.css">
+<title>coupling+cohesion</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Coupling"><h1 id="Coupling">Coupling</h1></div>
+<ul>
+<li>
+<span class="todo">TODO</span>: Get coupling notes
+
+</ul>
+
+<div id="Cohesion"><h1 id="Cohesion">Cohesion</h1></div>
+<ul>
+<li>
+How closely elements of a module are related to each other
+
+<ul>
+<li>
+Low cohesion -- arbitrary group of unrelated elements
+
+<ul>
+<li>
+<span id="Cohesion-Example"></span><strong id="Example">Example</strong>: <code>&lt;utility&gt;</code>
+
+</ul>
+<li>
+Elements share a common theme, otherwise unrelated
+
+<ul>
+<li>
+<span id="Cohesion-Example"></span><strong id="Example">Example</strong>: <code>&lt;algorithm&gt;</code>
+
+</ul>
+<li>
+Elements manipulate state over the lifetime of an object
+
+<ul>
+<li>
+<span id="Cohesion-Example"></span><strong id="Example">Example</strong>: Functions to open/close/read files
+
+</ul>
+<li>
+Elements pass data to each other
+
+<li>
+High cohesion -- elements cooperate to perform exactly one task
+
+</ul>
+<li>
+<span id="Cohesion-Goal"></span><strong id="Goal">Goal</strong>: Achieve low coupling with high cohesion
+
+</ul>
+
+<div id="Cohesion-Decoupling the Interface (MVC)"><h2 id="Decoupling the Interface (MVC)">Decoupling the Interface (MVC)</h2></div>
+<ul>
+<li>
+Your primary program classes should not print things
+<pre cpp>
+class ChessBoard {
+	...
+	cout &lt;&lt; "Your move" &lt;&lt; endl;
+};
+</pre>
+
+<ul>
+<li>
+Bad design -- Inhibits code reuse
+
+<li>
+What if you want to reuse <code>ChessBoard</code>, but not have it communicate via <code>stdout</code>?
+
+<li>
+One solution: Give the class stream objects for I/O
+<pre cpp>
+class ChessBoard {
+	...
+	istream &amp;in;
+	ostream &amp;out;
+public:
+	...
+	ChessBoard(istream &amp;in, ostream &amp;out): in{in}, out{out} {}
+};
+
+// Can then use out &lt;&lt; "your move" &lt;&lt; endl;
+</pre>
+
+<li>
+Better -- but what if we don't want to use streams at all?
+
+<ul>
+<li>
+<code>ChessBoard</code> should not be doing any communication at all
+
+</ul>
+</ul>
+</ul>
+
+<ul>
+<li>
+<span id="Cohesion-Decoupling the Interface (MVC)-Single Responsibility Principle"></span><strong id="Single Responsibility Principle">Single Responsibility Principle</strong> -- "A class should only have one reason to change"
+
+<ul>
+<li>
+Gameplay and communication are <span id="Cohesion-Decoupling the Interface (MVC)-two"></span><strong id="two">two</strong> reasons (the class is doing too much)
+
+<li>
+Communicate with the <code>ChessBoard</code> via parameters/results/exceptions
+
+<ul>
+<li>
+Confine user communication outside the game class
+
+</ul>
+<li>
+<span id="Cohesion-Decoupling the Interface (MVC)-Q:"></span><strong id="Q:">Q:</strong> Shall we communicate in <code>main</code>?
+
+<li>
+<span id="Cohesion-Decoupling the Interface (MVC)-A:"></span><strong id="A:">A:</strong> No -- Hard to reuse code if it is in <code>main</code>
+
+<ul>
+<li>
+Have a class for communication, that is separate from the gameplay classes
+
+</ul>
+</ul>
+<li>
+<span id="Cohesion-Decoupling the Interface (MVC)-Architecture"></span><strong id="Architecture">Architecture</strong> -- Model-View Controller (<span id="Cohesion-Decoupling the Interface (MVC)-MVC"></span><strong id="MVC">MVC</strong>) 
+
+<ul>
+<li>
+Separate the distinct notions of the data ("model"), the presentation of the data ("view"), and control/manipulation of the data ("controller")
+
+<li>
+Sometimes the Model and View communicate directly, sometimes they go through the Controller
+
+<li>
+<span id="Cohesion-Decoupling the Interface (MVC)-UML"></span><strong id="UML">UML</strong>: Model and View on top, connected with dotted line, both connected to Controller below
+
+<li>
+Model
+
+<ul>
+<li>
+Can have multiple views
+
+<ul>
+<li>
+<span id="Cohesion-Decoupling the Interface (MVC)-Example"></span><strong id="Example">Example</strong>: Text and graphics
+
+<li>
+Doesn't need to know about their details
+
+<li>
+Classic Observer Pattern (or could communicate through the Controller)
+
+</ul>
+</ul>
+<li>
+Controller
+
+<ul>
+<li>
+Mediates control flow between model and view
+
+<li>
+<span id="Cohesion-Decoupling the Interface (MVC)-Example"></span><strong id="Example">Example</strong>: Turn-taking or full game rules
+
+<li>
+May communicate with the user for input (or this could be the view)
+
+</ul>
+<li>
+By decoupling presentation and control, MVC promotes reuse
+
+</ul>
+</ul>
+
+</body>
+</html>

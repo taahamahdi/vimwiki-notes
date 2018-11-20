@@ -1,0 +1,62 @@
+= Coupling =
+* TODO: Get coupling notes
+
+= Cohesion =
+* How closely elements of a module are related to each other
+	* Low cohesion -- arbitrary group of unrelated elements
+		* *Example*: `<utility>`
+	* Elements share a common theme, otherwise unrelated
+		* *Example*: `<algorithm>`
+	* Elements manipulate state over the lifetime of an object
+		* *Example*: Functions to open/close/read files
+	* Elements pass data to each other
+	* High cohesion -- elements cooperate to perform exactly one task
+* *Goal*: Achieve low coupling with high cohesion
+
+== Decoupling the Interface (MVC) ==
+* Your primary program classes should not print things
+{{{cpp
+class ChessBoard {
+	...
+	cout << "Your move" << endl;
+};
+}}}
+	* Bad design -- Inhibits code reuse
+	* What if you want to reuse `ChessBoard`, but not have it communicate via `stdout`?
+	* One solution: Give the class stream objects for I/O
+{{{cpp
+class ChessBoard {
+	...
+	istream &in;
+	ostream &out;
+public:
+	...
+	ChessBoard(istream &in, ostream &out): in{in}, out{out} {}
+};
+
+// Can then use out << "your move" << endl;
+}}}
+	* Better -- but what if we don't want to use streams at all?
+		* `ChessBoard` should not be doing any communication at all
+
+* *Single Responsibility Principle* -- "A class should only have one reason to change"
+	* Gameplay and communication are *two* reasons (the class is doing too much)
+	* Communicate with the `ChessBoard` via parameters/results/exceptions
+		* Confine user communication outside the game class
+	* *Q:* Shall we communicate in `main`?
+	* *A:* No -- Hard to reuse code if it is in `main`
+		* Have a class for communication, that is separate from the gameplay classes
+* *Architecture* -- Model-View Controller (*MVC*) 
+	* Separate the distinct notions of the data ("model"), the presentation of the data ("view"), and control/manipulation of the data ("controller")
+	* Sometimes the Model and View communicate directly, sometimes they go through the Controller
+	* *UML*: Model and View on top, connected with dotted line, both connected to Controller below
+	* Model
+		* Can have multiple views
+			* *Example*: Text and graphics
+			* Doesn't need to know about their details
+			* Classic Observer Pattern (or could communicate through the Controller)
+	* Controller
+		* Mediates control flow between model and view
+		* *Example*: Turn-taking or full game rules
+		* May communicate with the user for input (or this could be the view)
+	* By decoupling presentation and control, MVC promotes reuse

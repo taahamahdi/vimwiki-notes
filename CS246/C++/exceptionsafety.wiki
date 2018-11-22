@@ -1,0 +1,257 @@
+= Exception Safety =
+
+Consider:
+{{{cpp
+void f() {
+	MyClass mc;
+	MyClass *p = new MyClass;
+	g();
+	delete p;
+}
+}}}
+* No leaks -- but what if `g` throws?
+	* What is guaranteed?
+		* During stack unwinding, all stack-allocated data is cleared up
+			* Destructors run and memory is reclaimed
+		* Heap-allocated memory is not destroyed
+	* If `g` throws, `*p` is leaked (`mc` is not)
+* We must make sure no memory is leaked to prevent future issues (what if `f` is called a thousand times?)
+{{{cpp
+void f() {
+	MyClass mc;
+	MyClass *p = new MyClass;
+	try {
+		g();
+	}
+	catch (...) {
+		delete p;
+		throw;
+	}
+}
+}}}
+	* This implementation is ugly and error-prone, and also contains code duplication
+	* How else can we guarantee that something (i.e. `delete p`) will happen no matter how we exit `f` (whether normal or via exception)?
+* In some languages, there are "finally" clauses that guarantee certain final actions
+	* Not in C++
+* Only thing you can count on in C++ -- destructors for stack-allocated data will run
+	* Therefore use stack-allocated data with destructors as much as possible
+		* (Use the guarantee to your advantage)
+* C++ Idiom: *RAII* -- Resource Acquisition Is Initialization
+	* Every resource should be wrapped in a stack-allocated object, whose destructor deletes it
+		* *Example*: Files
+{{{cpp
+{
+	ifstream f{"file"}; // Acquiring the resource ("file") == initializing the object (f)
+	...
+	// The file is guaranteed to be released when f is popped from the stack
+	// f's destructor runs
+}
+}}}
+	* This can be done with dynamic memory
+	* `class std::unique_ptr<T>` (by `#include <memory>`)
+		* Takes a `T*` in the constructor
+		* The destructor will delete the pointer
+		* In between, can dereference it, just like a pointer
+{{{cpp
+void f() {
+	MyClass mc;
+	std::unique_ptr<MyClass> p{new MyClass};
+	g();
+}
+
+// Alternative method (completely equivalent)
+void f() {
+	MyClass mc;
+	auto p = std::make_unique<MyClass>();
+	// Arguments to constructor go in make_unique parentheses
+	// auto type is unique_ptr<MyClass>
+	g();
+}
+}}}
+	* No leaks. Guaranteed.
+	* *Difficulty*:
+{{{cpp
+class C {...};
+unique_ptr<C> p { new C{...} };
+unique_ptr<C> q = p;
+// Does not compile
+}}}
+		* What happens when a `unique_ptr` is copied? -- Don't want to delete the same pointer twice!
+			* Instead -- copying is disabled for `unique_ptr`s
+			* They can only be moved
+* *Sample implementation*:
+{{{cpp
+template<typename T> class unique_ptr {
+	T *ptr;
+public:
+	explicit unique_ptr(T *p) ptr{p} {}
+	~unique_ptr() { delete ptr; }
+	// Disable copy constructor
+	unique_ptr(const unique_ptr<T> &other) = delete;
+	// Copy assignment operator is automatically disabled
+	unique_ptr &operator=(const unique_ptr<T> &other) = delete;
+	unique_ptr(unique_ptr<T> &&other): ptr{other.ptr} { other.ptr = nullptr; }
+	unique_ptr<T> &operator=(unique_ptr<T> &&other) {
+		std::swap(ptr, other.ptr);
+		return *this;
+	}
+	T &operator*() { return *ptr; }
+};
+}}}
+* If you need to be able to copy pointers
+	* First answer the question of _ownership_
+		* Who will own the resource? Who will have responsibility for freeing it?
+			* That pointer should be `unique_ptr`
+				* All other pointers can be raw pointers
+				* (Fetch the underlying raw pointer with `p.get()`)
+* If there is true shared ownership (i.e. any of the several pointers might free the resource) -- use `std::shared_ptr`
+{{{cpp
+{
+	auto p1 = std::make_shared<MyClass>();
+	if (...) {
+		auto p2 = p1;
+	}
+	// p2 is popped but pointer isn't deleted
+}
+// p1 popped, pointer is deleted
+}}}
+	* Shared pointers maintain a _reference count_
+		* Maintain a count of all shared pointers pointing at that object
+		* Memory is freed when the reference count reaches 0
+	* *Consider*:
+{{{lisp
+(define l1 (cons 1 (cons 2 (cons 3 empty))))
+(define l2 (cons 4 (rest l1)))
+}}}
+		* `l1`: [1|-]->[2|-]->[3|/]
+		* `l2`: [4|-]--^
+			* In C++, consider each pointer as a shared pointer
+	* Use the type of pointer that accurately reflects the pointer's ownership role
+	* *Dramatically* fewer opportunities for leaks
+
+=== Back to Exception Safety ===
+
+* 3 levels of exception safety guarantees
+	1. Basic guarantee -- If an exception occurs, the program will be in some valid state
+		* Nothing is leaked
+		* Class invariance maintained (no corrupted data structures)
+	2. Strong guarantee -- if an exception is raised while executing `f`, the state of the program will be as if `f` had not been called
+	3. No-throw guarantee -- `f` will never throw an exception, and will always achieve its purpose
+* *Example*:
+{{{cpp
+class A {...};
+class B {...};
+class C {
+	A a;
+	B b;
+public:
+	void f() {
+		a.g();
+		b.h();
+		// Both may throw, offer strong guarantee
+	}
+};
+}}}
+	* Is `C::f` exception safe?
+		* If `a.g()` throws, nothing has happened yet. OK.
+		* If `b.h()` throws, the effects of `g` would have to be undone to offer the strong guarantee
+			* Very hard or impossible if `g` has non-local side-effects
+		* Thus, we conclude it is probably not exception safe
+	* If `g` + `h` do not have non-local side-effects, we can use `copy` and `swap`:
+{{{cpp
+class C {
+	...
+	void f() {
+		A atemp = a;
+		B btemp = b;
+
+		atemp.g();
+		btemp.h();
+		// If these throw, original a + b are still intact
+		a = atemp;
+		b = btemp;
+		// Issue: what if copy assignment throws?
+		// Better if swap was no throw -- assigning pointers cannot throw
+	}
+};
+}}}
+		* Solution: pimpl idiom
+{{{cpp
+struct CImpl {
+	A a;
+	B b;
+};
+
+class C {
+	unique_ptr<CImpl> pImpl;
+	void f() {
+		auto tmp = make_unique<CImpl>(*pImpl);
+		tmp->a.g();
+		tmp->b.h();
+		std::swap(pImpl, tmp); // No throw -- strong guarantee
+	}
+};
+}}}
+
+=== Exception Safety in STL: Vectors ===
+
+* Vectors -- encapsulate a heap-allocated array
+	* Follow RAII -- when a stack-allocated vector goes out of scope, the internal heap-allocated array is freed
+{{{cpp
+void f() {
+	vector<MyClass> v;
+	...
+}
+}}}
+		* `v` goes out of scope -- array is freed
+			* `MyClass` destructor runs on all objects in the vector
+		* But:
+{{{cpp
+void g() {
+	vector<MyClass*> v;
+	...
+}
+}}}
+		* Array is freed -- but pointers don't have destructors, so any objects pointed to by pointers are *not* deleted
+			* Good -- `v` doesn't know whether the pointers in the array *own* the objects they point at
+			* To delete, must use `for (auto &x:v) delete x;`, but note that you should only be using raw pointers when pointing to objects you don't own
+		* But:
+{{{cpp
+void h() {
+	vector<unique_ptr<MyClass>> v;
+	...
+}
+}}}
+		* Array is freed -- `unique_ptr` destructor runs, so the objects *are* deleted
+			* *No* explicit deallocation
+* `vector<T>::emplace_back`:
+	* Offers the strong guarantee
+		* If the array is full (`size` == `cap`):
+			1. Allocate new array
+				* No changes. OK.
+			2. Copy objects over (copy constructor)
+				* *Can fail* if the copy constructor throws
+					* Destroy the new array
+					* Old array still intact -- still have strong guarantee
+			3. Delete old array
+				* Can't fail. OK.
+		* Therefore it maintains notion of strong guarantee
+	* But -- copying is expensive *and* the old array will be thrown away
+		* Wouldn't moving the objects be more efficient?
+			1. Allocate new array
+			2. *Move* the objects over (move constructor)
+				* If the move constructor throws, can't offer the strong guarantee
+				* Original is no longer intact
+			3. Delete old array
+		* If the move constructor offers the no-throw guarantee, `emplace_back` will use the move constructor; otherwise, it uses the copy constructor, which may be slower
+			* Thus your move operations should provide the no-throw guarantee, and you should indicate that they do:
+{{{cpp
+class MyClass {
+public:
+	MyClass(MyClass &&other) noexcept {...}
+	MyClass &operator=(MyClass &&other) noexcept {...}
+};
+}}}
+		* If you know that a function will never throw or propagate an exception, declare it `noexcept`
+			* Facilitates optimization
+			* At minimum, moves and swaps should be `noexcept`

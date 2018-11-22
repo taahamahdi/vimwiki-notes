@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>exceptionsafety</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Exception Safety"><h1 id="Exception Safety">Exception Safety</h1></div>
+
+<p>
+Consider:
+</p>
+<pre cpp>
+void f() {
+	MyClass mc;
+	MyClass *p = new MyClass;
+	g();
+	delete p;
+}
+</pre>
+<ul>
+<li>
+No leaks -- but what if <code>g</code> throws?
+
+<ul>
+<li>
+What is guaranteed?
+
+<ul>
+<li>
+During stack unwinding, all stack-allocated data is cleared up
+
+<ul>
+<li>
+Destructors run and memory is reclaimed
+
+</ul>
+<li>
+Heap-allocated memory is not destroyed
+
+</ul>
+<li>
+If <code>g</code> throws, <code>*p</code> is leaked (<code>mc</code> is not)
+
+</ul>
+<li>
+We must make sure no memory is leaked to prevent future issues (what if <code>f</code> is called a thousand times?)
+<pre cpp>
+void f() {
+	MyClass mc;
+	MyClass *p = new MyClass;
+	try {
+		g();
+	}
+	catch (...) {
+		delete p;
+		throw;
+	}
+}
+</pre>
+
+<ul>
+<li>
+This implementation is ugly and error-prone, and also contains code duplication
+
+<li>
+How else can we guarantee that something (i.e. <code>delete p</code>) will happen no matter how we exit <code>f</code> (whether normal or via exception)?
+
+</ul>
+<li>
+In some languages, there are "finally" clauses that guarantee certain final actions
+
+<ul>
+<li>
+Not in C++
+
+</ul>
+<li>
+Only thing you can count on in C++ -- destructors for stack-allocated data will run
+
+<ul>
+<li>
+Therefore use stack-allocated data with destructors as much as possible
+
+<ul>
+<li>
+(Use the guarantee to your advantage)
+
+</ul>
+</ul>
+<li>
+C++ Idiom: <span id="Exception Safety-RAII"></span><strong id="RAII">RAII</strong> -- Resource Acquisition Is Initialization
+
+<ul>
+<li>
+Every resource should be wrapped in a stack-allocated object, whose destructor deletes it
+
+<ul>
+<li>
+<span id="Exception Safety-Example"></span><strong id="Example">Example</strong>: Files
+<pre cpp>
+{
+	ifstream f{"file"}; // Acquiring the resource ("file") == initializing the object (f)
+	...
+	// The file is guaranteed to be released when f is popped from the stack
+	// f's destructor runs
+}
+</pre>
+
+</ul>
+<li>
+This can be done with dynamic memory
+
+<li>
+<code>class std::unique_ptr&lt;T&gt;</code> (by <code>#include &lt;memory&gt;</code>)
+
+<ul>
+<li>
+Takes a <code>T*</code> in the constructor
+
+<li>
+The destructor will delete the pointer
+
+<li>
+In between, can dereference it, just like a pointer
+<pre cpp>
+void f() {
+	MyClass mc;
+	std::unique_ptr&lt;MyClass&gt; p{new MyClass};
+	g();
+}
+
+// Alternative method (completely equivalent)
+void f() {
+	MyClass mc;
+	auto p = std::make_unique&lt;MyClass&gt;();
+	// Arguments to constructor go in make_unique parentheses
+	// auto type is unique_ptr&lt;MyClass&gt;
+	g();
+}
+</pre>
+
+</ul>
+<li>
+No leaks. Guaranteed.
+
+<li>
+<span id="Exception Safety-Difficulty"></span><strong id="Difficulty">Difficulty</strong>:
+<pre cpp>
+class C {...};
+unique_ptr&lt;C&gt; p { new C{...} };
+unique_ptr&lt;C&gt; q = p;
+// Does not compile
+</pre>
+
+<ul>
+<li>
+What happens when a <code>unique_ptr</code> is copied? -- Don't want to delete the same pointer twice!
+
+<ul>
+<li>
+Instead -- copying is disabled for <code>unique_ptr</code>s
+
+<li>
+They can only be moved
+
+</ul>
+</ul>
+</ul>
+<li>
+<span id="Exception Safety-Sample implementation"></span><strong id="Sample implementation">Sample implementation</strong>:
+<pre cpp>
+template&lt;typename T&gt; class unique_ptr {
+	T *ptr;
+public:
+	explicit unique_ptr(T *p) ptr{p} {}
+	~unique_ptr() { delete ptr; }
+	// Disable copy constructor
+	unique_ptr(const unique_ptr&lt;T&gt; &amp;other) = delete;
+	// Copy assignment operator is automatically disabled
+	unique_ptr &amp;operator=(const unique_ptr&lt;T&gt; &amp;other) = delete;
+	unique_ptr(unique_ptr&lt;T&gt; &amp;&amp;other): ptr{other.ptr} { other.ptr = nullptr; }
+	unique_ptr&lt;T&gt; &amp;operator=(unique_ptr&lt;T&gt; &amp;&amp;other) {
+		std::swap(ptr, other.ptr);
+		return *this;
+	}
+	T &amp;operator*() { return *ptr; }
+};
+</pre>
+
+<li>
+If you need to be able to copy pointers
+
+<ul>
+<li>
+First answer the question of <em>ownership</em>
+
+<ul>
+<li>
+Who will own the resource? Who will have responsibility for freeing it?
+
+<ul>
+<li>
+That pointer should be <code>unique_ptr</code>
+
+<ul>
+<li>
+All other pointers can be raw pointers
+
+<li>
+(Fetch the underlying raw pointer with <code>p.get()</code>)
+
+</ul>
+</ul>
+</ul>
+</ul>
+<li>
+If there is true shared ownership (i.e. any of the several pointers might free the resource) -- use <code>std::shared_ptr</code>
+<pre cpp>
+{
+	auto p1 = std::make_shared&lt;MyClass&gt;();
+	if (...) {
+		auto p2 = p1;
+	}
+	// p2 is popped but pointer isn't deleted
+}
+// p1 popped, pointer is deleted
+</pre>
+
+<ul>
+<li>
+Shared pointers maintain a <em>reference count</em>
+
+<ul>
+<li>
+Maintain a count of all shared pointers pointing at that object
+
+<li>
+Memory is freed when the reference count reaches 0
+
+</ul>
+<li>
+<span id="Exception Safety-Consider"></span><strong id="Consider">Consider</strong>:
+<pre lisp>
+(define l1 (cons 1 (cons 2 (cons 3 empty))))
+(define l2 (cons 4 (rest l1)))
+</pre>
+
+<ul>
+<li>
+<code>l1</code>: [1|-]-&gt;[2|-]-&gt;[3|/]
+
+<li>
+<code>l2</code>: [4|-]--^
+
+<ul>
+<li>
+In C++, consider each pointer as a shared pointer
+
+</ul>
+</ul>
+<li>
+Use the type of pointer that accurately reflects the pointer's ownership role
+
+<li>
+<span id="Exception Safety-Dramatically"></span><strong id="Dramatically">Dramatically</strong> fewer opportunities for leaks
+
+</ul>
+</ul>
+
+<div id="Exception Safety-Back to Exception Safety"><h3 id="Back to Exception Safety">Back to Exception Safety</h3></div>
+
+<ul>
+<li>
+3 levels of exception safety guarantees
+
+<ol>
+<li>
+Basic guarantee -- If an exception occurs, the program will be in some valid state
+
+<ul>
+<li>
+Nothing is leaked
+
+<li>
+Class invariance maintained (no corrupted data structures)
+
+</ul>
+<li>
+Strong guarantee -- if an exception is raised while executing <code>f</code>, the state of the program will be as if <code>f</code> had not been called
+
+<li>
+No-throw guarantee -- <code>f</code> will never throw an exception, and will always achieve its purpose
+
+</ol>
+<li>
+<span id="Exception Safety-Back to Exception Safety-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+class A {...};
+class B {...};
+class C {
+	A a;
+	B b;
+public:
+	void f() {
+		a.g();
+		b.h();
+		// Both may throw, offer strong guarantee
+	}
+};
+</pre>
+
+<ul>
+<li>
+Is <code>C::f</code> exception safe?
+
+<ul>
+<li>
+If <code>a.g()</code> throws, nothing has happened yet. OK.
+
+<li>
+If <code>b.h()</code> throws, the effects of <code>g</code> would have to be undone to offer the strong guarantee
+
+<ul>
+<li>
+Very hard or impossible if <code>g</code> has non-local side-effects
+
+</ul>
+<li>
+Thus, we conclude it is probably not exception safe
+
+</ul>
+<li>
+If <code>g</code> + <code>h</code> do not have non-local side-effects, we can use <code>copy</code> and <code>swap</code>:
+<pre cpp>
+class C {
+	...
+	void f() {
+		A atemp = a;
+		B btemp = b;
+
+		atemp.g();
+		btemp.h();
+		// If these throw, original a + b are still intact
+		a = atemp;
+		b = btemp;
+		// Issue: what if copy assignment throws?
+		// Better if swap was no throw -- assigning pointers cannot throw
+	}
+};
+</pre>
+
+<ul>
+<li>
+Solution: pimpl idiom
+<pre cpp>
+struct CImpl {
+	A a;
+	B b;
+};
+
+class C {
+	unique_ptr&lt;CImpl&gt; pImpl;
+	void f() {
+		auto tmp = make_unique&lt;CImpl&gt;(*pImpl);
+		tmp-&gt;a.g();
+		tmp-&gt;b.h();
+		std::swap(pImpl, tmp); // No throw -- strong guarantee
+	}
+};
+</pre>
+
+</ul>
+</ul>
+</ul>
+
+<div id="Exception Safety-Exception Safety in STL: Vectors"><h3 id="Exception Safety in STL: Vectors">Exception Safety in STL: Vectors</h3></div>
+
+<ul>
+<li>
+Vectors -- encapsulate a heap-allocated array
+
+<ul>
+<li>
+Follow RAII -- when a stack-allocated vector goes out of scope, the internal heap-allocated array is freed
+<pre cpp>
+void f() {
+	vector&lt;MyClass&gt; v;
+	...
+}
+</pre>
+
+<ul>
+<li>
+<code>v</code> goes out of scope -- array is freed
+
+<ul>
+<li>
+<code>MyClass</code> destructor runs on all objects in the vector
+
+</ul>
+<li>
+But:
+<pre cpp>
+void g() {
+	vector&lt;MyClass*&gt; v;
+	...
+}
+</pre>
+
+<li>
+Array is freed -- but pointers don't have destructors, so any objects pointed to by pointers are <span id="Exception Safety-Exception Safety in STL: Vectors-not"></span><strong id="not">not</strong> deleted
+
+<ul>
+<li>
+Good -- <code>v</code> doesn't know whether the pointers in the array <span id="Exception Safety-Exception Safety in STL: Vectors-own"></span><strong id="own">own</strong> the objects they point at
+
+<li>
+To delete, must use <code>for (auto &amp;x:v) delete x;</code>, but note that you should only be using raw pointers when pointing to objects you don't own
+
+</ul>
+<li>
+But:
+<pre cpp>
+void h() {
+	vector&lt;unique_ptr&lt;MyClass&gt;&gt; v;
+	...
+}
+</pre>
+
+<li>
+Array is freed -- <code>unique_ptr</code> destructor runs, so the objects <span id="Exception Safety-Exception Safety in STL: Vectors-are"></span><strong id="are">are</strong> deleted
+
+<ul>
+<li>
+<span id="Exception Safety-Exception Safety in STL: Vectors-No"></span><strong id="No">No</strong> explicit deallocation
+
+</ul>
+</ul>
+</ul>
+<li>
+<code>vector&lt;T&gt;::emplace_back</code>:
+
+<ul>
+<li>
+Offers the strong guarantee
+
+<ul>
+<li>
+If the array is full (<code>size</code> == <code>cap</code>):
+
+<ol>
+<li>
+Allocate new array
+
+<ul>
+<li>
+No changes. OK.
+
+</ul>
+<li>
+Copy objects over (copy constructor)
+
+<ul>
+<li>
+<span id="Exception Safety-Exception Safety in STL: Vectors-Can fail"></span><strong id="Can fail">Can fail</strong> if the copy constructor throws
+
+<ul>
+<li>
+Destroy the new array
+
+<li>
+Old array still intact -- still have strong guarantee
+
+</ul>
+</ul>
+<li>
+Delete old array
+
+<ul>
+<li>
+Can't fail. OK.
+
+</ul>
+</ol>
+<li>
+Therefore it maintains notion of strong guarantee
+
+</ul>
+<li>
+But -- copying is expensive <span id="Exception Safety-Exception Safety in STL: Vectors-and"></span><strong id="and">and</strong> the old array will be thrown away
+
+<ul>
+<li>
+Wouldn't moving the objects be more efficient?
+
+<ol>
+<li>
+Allocate new array
+
+<li>
+<span id="Exception Safety-Exception Safety in STL: Vectors-Move"></span><strong id="Move">Move</strong> the objects over (move constructor)
+
+<ul>
+<li>
+If the move constructor throws, can't offer the strong guarantee
+
+<li>
+Original is no longer intact
+
+</ul>
+<li>
+Delete old array
+
+</ol>
+<li>
+If the move constructor offers the no-throw guarantee, <code>emplace_back</code> will use the move constructor; otherwise, it uses the copy constructor, which may be slower
+
+<ul>
+<li>
+Thus your move operations should provide the no-throw guarantee, and you should indicate that they do:
+<pre cpp>
+class MyClass {
+public:
+	MyClass(MyClass &amp;&amp;other) noexcept {...}
+	MyClass &amp;operator=(MyClass &amp;&amp;other) noexcept {...}
+};
+</pre>
+
+</ul>
+<li>
+If you know that a function will never throw or propagate an exception, declare it <code>noexcept</code>
+
+<ul>
+<li>
+Facilitates optimization
+
+<li>
+At minimum, moves and swaps should be <code>noexcept</code>
+
+</ul>
+</ul>
+</ul>
+</ul>
+
+</body>
+</html>

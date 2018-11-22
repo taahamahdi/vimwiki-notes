@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>casting</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Casting"><h1 id="Casting">Casting</h1></div>
+
+<ul>
+<li>
+In C:
+<pre cpp>
+Node n;
+int *cp = (int *) &amp;n; // Cast -- forces C++ to treat a Node* as an int*
+</pre>
+
+<ul>
+<li>
+C-style casts should be avoided in C++
+
+<li>
+If you <span id="Casting-must"></span><strong id="must">must</strong> cast, use a C++-style cast
+
+<li>
+4 kinds:
+
+<ol>
+<li>
+<code>static_cast</code> -- "sensible" cast with well-defined meanings
+
+<ul>
+<li>
+<span id="Casting-Example"></span><strong id="Example">Example</strong>: <code>double</code> -&gt; <code>int</code>:
+<pre cpp>
+double d;
+
+void f(int x);
+void f(double x);
+
+f(static_cast&lt;int&gt;(d));
+// Calls void f(int x)
+</pre>
+
+</ul>
+</ol>
+</ul>
+</ul>
+
+<ul>
+<li>
+Superclass pointer -&gt; Subclass pointer:
+<pre cpp>
+Book *b = new Text{...};
+Text *t = static_cast&lt;Text *&gt;(b);
+// We know b is pointing to a Text, so force it
+</pre>
+
+<ul>
+<li>
+You are taking responsibility that <code>b</code> actually points at a <code>Text</code> -- "Trust me"
+
+</ul>
+</ul>
+<li>
+<code>reinterpret_cast</code> -- unsafe implementation-specific, "weird" conversions
+<pre cpp>
+Student s;
+Turtle *t = reinterpret_cast&lt;Turtle *&gt;(&amp;s);
+
+</pre>
+
+</body>
+</html>

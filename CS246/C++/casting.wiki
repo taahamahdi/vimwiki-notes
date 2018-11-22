@@ -1,0 +1,33 @@
+= Casting =
+
+* In C:
+{{{cpp
+Node n;
+int *cp = (int *) &n; // Cast -- forces C++ to treat a Node* as an int*
+}}}
+	* C-style casts should be avoided in C++
+	* If you *must* cast, use a C++-style cast
+	* 4 kinds:
+		1. `static_cast` -- "sensible" cast with well-defined meanings
+			* *Example*: `double` -> `int`:
+{{{cpp
+double d;
+
+void f(int x);
+void f(double x);
+
+f(static_cast<int>(d));
+// Calls void f(int x)
+}}}
+
+			* Superclass pointer -> Subclass pointer:
+{{{cpp
+Book *b = new Text{...};
+Text *t = static_cast<Text *>(b);
+// We know b is pointing to a Text, so force it
+}}}
+				* You are taking responsibility that `b` actually points at a `Text` -- "Trust me"
+		* `reinterpret_cast` -- unsafe implementation-specific, "weird" conversions
+{{{cpp
+Student s;
+Turtle *t = reinterpret_cast<Turtle *>(&s);

@@ -23,11 +23,79 @@ f(static_cast<int>(d));
 			* Superclass pointer -> Subclass pointer:
 {{{cpp
 Book *b = new Text{...};
-Text *t = static_cast<Text *>(b);
+Text *t = static_cast<Text*>(b);
 // We know b is pointing to a Text, so force it
 }}}
 				* You are taking responsibility that `b` actually points at a `Text` -- "Trust me"
-		* `reinterpret_cast` -- unsafe implementation-specific, "weird" conversions
+		2. `reinterpret_cast` -- unsafe implementation-specific, "weird" conversions
 {{{cpp
 Student s;
 Turtle *t = reinterpret_cast<Turtle *>(&s);
+}}}
+		3. `const_cast` -- for converting between `const` and non-`const`
+			* Only C++ cast that can "cast away `const`"
+{{{cpp
+void g(int *p); // Suppose you know that g doesn't actually modify *p
+
+void f(const int *p) {
+	...
+	g(const_cast<int*>(p));
+}
+}}}
+			* Program:
+				* | Doesn't use `const` | `const`-correct |
+				* Compile error occurs at the border between the two
+				* Adjusting the border -- Moves the border, but at the new line, there is another compile error
+				* `const`-poisoning -- the repeated issues that occur with `const` in code -- edit the code until it compiles
+		4. `dynamic_cast` -- Is it safe to convert a `Book*` to a `Text*`?
+{{{cpp
+Book *pb = ...;
+static_cast<Text*>(pb)->getTopic(); // Is it safe?
+}}}
+			* Safe depending on what `pb` actually points at
+			* Better to do a tentative cast -- try it and see if it succeeds
+{{{cpp
+Book *pb = ...;
+Text *pt = dynamic_cast<Text*>(pb);
+}}}
+				* If the cast works (i.e. `*pb` really is a `Text`, or a subclass of `Text`), `pt` points at the object
+				* If the cast fails, `pt` will be `nullptr`
+{{{cpp
+if (pt) cout << pt->getTopic();
+else cout << "Not a text";
+}}}
+			* With smart pointers:
+				* `static_pointer_cast`
+				* `dynamic_pointer_cast`
+				* cast `shared_ptr`s to `shared_ptr`s
+			* Can use dynamic casting to make decision based on an object's *Run-Time Type Information* (RTTI)
+{{{cpp
+voidwhatIsIt(shared_ptr<Book>b) {
+	if (dyanmic_pointer_cast<Comic>(b)) cout << "Comic";
+	else if (dynamic_pointer_cast<Text>(b)) cout << "Text";
+	else cout << "Book";
+}
+}}}
+			* Code like this is tightly coupled to the `Book` class hierarchy and may indicate bad design
+				* *Better*: Use `virtual` methods or write a visitor (if possible)
+			* Dynamic casting also works with references:
+{{{cpp
+Text t{...};
+Book &b = t;
+Text &t2 = dynamic_cast<Text&>(b);
+}}}
+				* If `b` "points to" a `Text`, then `t2` is a reference to the same `Text`
+				* If not ... (there's no such thing as a null reference)
+					* Raises exception -- `std::bad_cast`
+			* *Note*: Dynamic casting only works on classes with at least one virtual method
+			* With dynamic reference casting, we can "solve" the polymorphic assignment problem:
+{{{cpp
+Text &Text::operator=(const Book &other) { // Virtual
+	const Text &textOther = dynamic_cast<const Text&>(other);
+	if (this == &textOther) return *this;
+	Book::operator=(other);
+	other = textOther.topic;
+	return *this;
+}
+}}}
+				* Throws if `other` is not a `Text`

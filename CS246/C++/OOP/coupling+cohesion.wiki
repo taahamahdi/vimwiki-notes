@@ -1,7 +1,9 @@
 = Coupling =
-* TODO: Get coupling notes
+
+* Please refer to [[https://github.com/RRethy/NOTES-CS246/blob/master/nov_20.md|this]].
 
 = Cohesion =
+
 * How closely elements of a module are related to each other
 	* Low cohesion -- arbitrary group of unrelated elements
 		* *Example*: `<utility>`

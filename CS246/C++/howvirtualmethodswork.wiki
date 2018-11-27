@@ -1,0 +1,94 @@
+= How Virtual Methods Work =
+
+{{{cpp
+class Vec {
+	int x, y;
+public:
+	int f();
+};
+
+class Vec2 {
+	int x, y;
+public:
+	virtual int f();
+};
+}}}
+* What's the difference?
+	* `Vec v{1,2};`
+	* `Vec w{1,2};`
+		* Do they look the same in memory?
+		* `cout << "sizeof(v) << ' ' << sizeof(w) << endl;`
+			* `v` is 8, `w` is 16
+				* 8 is space for 2 `int`s, no space for the `f` method
+					* Compiler turns methods into ordinary functions and stores them separately from objects
+				* *Recall*:
+{{{cpp
+// Either type
+Book *pb = new Book
+			   Text
+			   Comic;
+
+auto pb = make_unique<Book
+					  Text
+					  Comic>();
+
+pb->isHeavy();
+}}}
+				* If `isHeavy()` is virtual -- choice of which version to run is based on the type of the actual object -- which the compiler cannot know in advance
+				* Therefore correct `isHeavy()` must be chosen at runtime -- How? (Implementation-specific -- but every compiler does it this way)
+				* For each class with virtual methods, compiler creates a table of function pointers (the *vtable* (virtual table))
+{{{cpp
+class C {
+	int x, y;
+	virtual void f();
+	virtual void g();
+	void h();
+	virtual ~C();
+};
+
+C c, d;
+}}}
+| vtable |   | C::f() |
+| "C"    |              | C::g()  |
+| f      | Points to f  | C::~C() |
+| g      | Point to g   |         |
+| ~C     | Points to ~C |         |
+				* `c`:
+| x    |                          |
+| y    |                          |
+| vptr | (points to vtable above) |
+				* `d`:
+| x    |                          |
+| y    |                          |
+| vptr | (points to vtable above) |
+				* C objects have an extra pointer (the *vpointer*) that points to C's vtable
+				* *Example*:
+* `Book b;`
+| title  |   | "Book"  |                         | Book::isHeavy |
+| author |   | isHeavy | points to Book::isHeavy |               |
+| length |   | ~Book   | points to Book::~Book   |               |
+| vptr   |   |         |                         | Book::~Book   |
+* `Text t;`
+| title  |   | "Text"  |                         | Text::isHeavy |
+| author |   | isHeavy | points to Text::isHeavy |               |
+| length |   | ~Text   | points to Text::~Text   |               |
+| topic  |   |         |                         |               |
+| vptr   |   |         |                         | Text::~Text   |
+			* Calling a virtual method (All of this happens *at runtime*):
+				- Follow vpointer to vtable
+				- Fetch pointer to actual method from table
+				- Follow the function pointer and call the function
+
+			* Therefore virtual function calls incur a small cost
+			* *Also*: Declaring at least one virtual function adds a pointer to the object
+				- Also a space cost
+
+			* Concretely, how is an object laid out?
+				* Compiler-dependent
+				* *g++*: vpointer first:
+| vptr  |
+| field |
+| field |
+| field |
+					1. Always know where the vpointer is
+					2. A pointer to B looks like a pointer to A if you ignore the last 2 fields

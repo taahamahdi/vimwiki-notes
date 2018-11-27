@@ -35,3 +35,6 @@
 			* [[C++/stl|The Standard Template Library]]
 			* [[C++/OOP/designpatterns|Design Patterns]]
 			* [[C++/OOP/stlmaps|STL Maps]]
+			* [[C++/OOP/coupling+cohesion|Coupling and Cohesion]]
+			* [[C++/exceptionsafety|Exception Safety]]
+			* [[C++/casting|Casting]]

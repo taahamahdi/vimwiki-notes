@@ -54,7 +54,7 @@ f(static_cast&lt;int&gt;(d));
 Superclass pointer -&gt; Subclass pointer:
 <pre cpp>
 Book *b = new Text{...};
-Text *t = static_cast&lt;Text *&gt;(b);
+Text *t = static_cast&lt;Text*&gt;(b);
 // We know b is pointing to a Text, so force it
 </pre>
 
@@ -69,8 +69,145 @@ You are taking responsibility that <code>b</code> actually points at a <code>Tex
 <pre cpp>
 Student s;
 Turtle *t = reinterpret_cast&lt;Turtle *&gt;(&amp;s);
-
 </pre>
+
+<li>
+<code>const_cast</code> -- for converting between <code>const</code> and non-<code>const</code>
+
+<ul>
+<li>
+Only C++ cast that can "cast away <code>const</code>"
+<pre cpp>
+void g(int *p); // Suppose you know that g doesn't actually modify *p
+
+void f(const int *p) {
+	...
+	g(const_cast&lt;int*&gt;(p));
+}
+</pre>
+
+<li>
+Program:
+
+<ul>
+<li>
+| Doesn't use <code>const</code> | <code>const</code>-correct |
+
+<li>
+Compile error occurs at the border between the two
+
+<li>
+Adjusting the border -- Moves the border, but at the new line, there is another compile error
+
+<li>
+<code>const</code>-poisoning -- the repeated issues that occur with <code>const</code> in code -- edit the code until it compiles
+
+</ul>
+</ul>
+<li>
+<code>dynamic_cast</code> -- Is it safe to convert a <code>Book*</code> to a <code>Text*</code>?
+<pre cpp>
+Book *pb = ...;
+static_cast&lt;Text*&gt;(pb)-&gt;getTopic(); // Is it safe?
+</pre>
+
+<ul>
+<li>
+Safe depending on what <code>pb</code> actually points at
+
+<li>
+Better to do a tentative cast -- try it and see if it succeeds
+<pre cpp>
+Book *pb = ...;
+Text *pt = dynamic_cast&lt;Text*&gt;(pb);
+</pre>
+
+<ul>
+<li>
+If the cast works (i.e. <code>*pb</code> really is a <code>Text</code>, or a subclass of <code>Text</code>), <code>pt</code> points at the object
+
+<li>
+If the cast fails, <code>pt</code> will be <code>nullptr</code>
+<pre cpp>
+if (pt) cout &lt;&lt; pt-&gt;getTopic();
+else cout &lt;&lt; "Not a text";
+</pre>
+
+</ul>
+<li>
+With smart pointers:
+
+<ul>
+<li>
+<code>static_pointer_cast</code>
+
+<li>
+<code>dynamic_pointer_cast</code>
+
+<li>
+cast <code>shared_ptr</code>s to <code>shared_ptr</code>s
+
+</ul>
+<li>
+Can use dynamic casting to make decision based on an object's <span id="Casting-Run-Time Type Information"></span><strong id="Run-Time Type Information">Run-Time Type Information</strong> (RTTI)
+<pre cpp>
+voidwhatIsIt(shared_ptr&lt;Book&gt;b) {
+	if (dyanmic_pointer_cast&lt;Comic&gt;(b)) cout &lt;&lt; "Comic";
+	else if (dynamic_pointer_cast&lt;Text&gt;(b)) cout &lt;&lt; "Text";
+	else cout &lt;&lt; "Book";
+}
+</pre>
+
+<li>
+Code like this is tightly coupled to the <code>Book</code> class hierarchy and may indicate bad design
+
+<ul>
+<li>
+<span id="Casting-Better"></span><strong id="Better">Better</strong>: Use <code>virtual</code> methods or write a visitor (if possible)
+
+</ul>
+<li>
+Dynamic casting also works with references:
+<pre cpp>
+Text t{...};
+Book &amp;b = t;
+Text &amp;t2 = dynamic_cast&lt;Text&amp;&gt;(b);
+</pre>
+
+<ul>
+<li>
+If <code>b</code> "points to" a <code>Text</code>, then <code>t2</code> is a reference to the same <code>Text</code>
+
+<li>
+If not ... (there's no such thing as a null reference)
+
+<ul>
+<li>
+Raises exception -- <code>std::bad_cast</code>
+
+</ul>
+</ul>
+<li>
+<span id="Casting-Note"></span><strong id="Note">Note</strong>: Dynamic casting only works on classes with at least one virtual method
+
+<li>
+With dynamic reference casting, we can "solve" the polymorphic assignment problem:
+<pre cpp>
+Text &amp;Text::operator=(const Book &amp;other) { // Virtual
+	const Text &amp;textOther = dynamic_cast&lt;const Text&amp;&gt;(other);
+	if (this == &amp;textOther) return *this;
+	Book::operator=(other);
+	other = textOther.topic;
+	return *this;
+}
+</pre>
+
+<ul>
+<li>
+Throws if <code>other</code> is not a <code>Text</code>
+
+</ul>
+</ul>
 
 </body>
 </html>

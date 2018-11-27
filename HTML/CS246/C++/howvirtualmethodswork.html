@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>howvirtualmethodswork</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="How Virtual Methods Work"><h1 id="How Virtual Methods Work">How Virtual Methods Work</h1></div>
+
+<pre cpp>
+class Vec {
+	int x, y;
+public:
+	int f();
+};
+
+class Vec2 {
+	int x, y;
+public:
+	virtual int f();
+};
+</pre>
+<ul>
+<li>
+What's the difference?
+
+<ul>
+<li>
+<code>Vec v{1,2};</code>
+
+<li>
+<code>Vec w{1,2};</code>
+
+<ul>
+<li>
+Do they look the same in memory?
+
+<li>
+<code>cout &lt;&lt; "sizeof(v) &lt;&lt; ' ' &lt;&lt; sizeof(w) &lt;&lt; endl;</code>
+
+<ul>
+<li>
+<code>v</code> is 8, <code>w</code> is 16
+
+<ul>
+<li>
+8 is space for 2 <code>int</code>s, no space for the <code>f</code> method
+
+<ul>
+<li>
+Compiler turns methods into ordinary functions and stores them separately from objects
+
+</ul>
+<li>
+<span id="How Virtual Methods Work-Recall"></span><strong id="Recall">Recall</strong>:
+<pre cpp>
+// Either type
+Book *pb = new Book
+			   Text
+			   Comic;
+
+auto pb = make_unique&lt;Book
+					  Text
+					  Comic&gt;();
+
+pb-&gt;isHeavy();
+</pre>
+
+<li>
+If <code>isHeavy()</code> is virtual -- choice of which version to run is based on the type of the actual object -- which the compiler cannot know in advance
+
+<li>
+Therefore correct <code>isHeavy()</code> must be chosen at runtime -- How? (Implementation-specific -- but every compiler does it this way)
+
+<li>
+For each class with virtual methods, compiler creates a table of function pointers (the <span id="How Virtual Methods Work-vtable"></span><strong id="vtable">vtable</strong> (virtual table))
+<pre cpp>
+class C {
+	int x, y;
+	virtual void f();
+	virtual void g();
+	void h();
+	virtual ~C();
+};
+
+C c, d;
+</pre>
+<table>
+<tr>
+<td>
+vtable
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+C::f()
+</td>
+</tr>
+<tr>
+<td>
+"C"
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+C::g()
+</td>
+</tr>
+<tr>
+<td>
+f
+</td>
+<td>
+Points to f
+</td>
+<td>
+C::~C()
+</td>
+</tr>
+<tr>
+<td>
+g
+</td>
+<td>
+Point to g
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+~C
+</td>
+<td>
+Points to ~C
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+</table>
+
+<li>
+<code>c</code>:
+<table>
+<tr>
+<td>
+x
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+y
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+vptr
+</td>
+<td>
+(points to vtable above)
+</td>
+</tr>
+</table>
+
+<li>
+<code>d</code>:
+<table>
+<tr>
+<td>
+x
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+y
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+vptr
+</td>
+<td>
+(points to vtable above)
+</td>
+</tr>
+</table>
+
+<li>
+C objects have an extra pointer (the <span id="How Virtual Methods Work-vpointer"></span><strong id="vpointer">vpointer</strong>) that points to C's vtable
+
+<li>
+<span id="How Virtual Methods Work-Example"></span><strong id="Example">Example</strong>:
+
+</ul>
+</ul>
+</ul>
+</ul>
+<li>
+<code>Book b;</code>
+<table>
+<tr>
+<td>
+title
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+"Book"
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+Book::isHeavy
+</td>
+</tr>
+<tr>
+<td>
+author
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+isHeavy
+</td>
+<td>
+points to Book::isHeavy
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+length
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+~Book
+</td>
+<td>
+points to Book::~Book
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+vptr
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+Book::~Book
+</td>
+</tr>
+</table>
+
+<li>
+<code>Text t;</code>
+<table>
+<tr>
+<td>
+title
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+"Text"
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+Text::isHeavy
+</td>
+</tr>
+<tr>
+<td>
+author
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+isHeavy
+</td>
+<td>
+points to Text::isHeavy
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+length
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+~Text
+</td>
+<td>
+points to Text::~Text
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+topic
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+vptr
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+Text::~Text
+</td>
+</tr>
+</table>
+
+<ul>
+<li>
+Calling a virtual method (All of this happens <span id="How Virtual Methods Work-at runtime"></span><strong id="at runtime">at runtime</strong>):
+
+<ul>
+<li>
+Follow vpointer to vtable
+
+<li>
+Fetch pointer to actual method from table
+
+<li>
+Follow the function pointer and call the function
+
+</ul>
+</ul>
+</ul>
+
+<ul>
+<li>
+Therefore virtual function calls incur a small cost
+
+<li>
+<span id="How Virtual Methods Work-Also"></span><strong id="Also">Also</strong>: Declaring at least one virtual function adds a pointer to the object
+
+<ul>
+<li>
+Also a space cost
+
+</ul>
+</ul>
+
+<ul>
+<li>
+Concretely, how is an object laid out?
+
+<ul>
+<li>
+Compiler-dependent
+
+<li>
+<span id="How Virtual Methods Work-g++"></span><strong id="g++">g++</strong>: vpointer first:
+<table>
+<tr>
+<td>
+vptr
+</td>
+</tr>
+<tr>
+<td>
+field
+</td>
+</tr>
+<tr>
+<td>
+field
+</td>
+</tr>
+<tr>
+<td>
+field
+</td>
+</tr>
+</table>
+
+<ol>
+<li>
+Always know where the vpointer is
+
+<li>
+A pointer to B looks like a pointer to A if you ignore the last 2 fields
+
+</ol>
+</ul>
+</ul>
+
+</body>
+</html>

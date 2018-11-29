@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="Stylesheet" type="text/css" href="../../style.css">
+<title>templatefunctions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<div id="Template Functions"><h1 id="Template Functions">Template Functions</h1></div>
+
+<pre cpp>
+template&lt;typename T&gt; T min(T x, T y) { return x &lt; y ? x : y; }
+
+int x = 1, y = 2;
+int z = min(x, y);
+// T is int -- compiler will figure that out based on the types
+// of x and y
+// Don't have to say min&lt;int&gt;(x, y) (though technically still legal)
+
+auto f = min(1.0, 3.0); // Compiler will figure out T is double
+</pre>
+<ul>
+<li>
+<code>min</code> works for any type <code>T</code> that has <code>operator&lt;</code>
+
+<li>
+C++ STL library <code>&lt;algorithm&gt;</code> -- suite of template functions, many of which work over iterators
+<pre cpp>
+template&lt;typename Itor, typename T&gt;
+Itor find(Itor first, Itor last, const T &amp;val) {
+	while (first != last) {
+		if (first == val) return first;
+		++first;
+	}
+	return last;
+}
+</pre>
+
+<ul>
+<li>
+<code>count</code> -- like <code>find</code>, but returns the number of occurrences of val
+
+<li>
+<code>copy</code>:
+<pre cpp>
+template&lt;typename InItor, typename OutItor&gt;
+OutItor copy(InItor first, InItor last, OutItor result) {
+	// Copies one container range [first, last) to another, starting at result
+	// Does not allocate new memory
+}
+
+// Example:
+vector&lt;int&gt; v {1,2,3,4,5,6,7};
+vector&lt;int&gt; u(4); // 0 0 0 0
+copy(v.begin(), v.begin() + 5, w.begin());
+// w = 2 3 4 5
+</pre>
+
+<li>
+<code>transform</code>:
+<pre cpp>
+template&lt;typename InItor, typename OutItor, typename Func&gt;
+OutItor transform(inItor first, InItor last, OutItor result, Func f) {
+	while (first != last) {
+		*result = f(*first);
+		++first;
+		++result;
+	}
+	return result;
+}
+
+// Example:
+int add1(int n) { return n + 1; }
+...
+vector v{2,3,5,7,11};
+vector w(v.size()); // 0 0 0 0 0
+transform(v.begin(), v.end(), w.begin(), add1); // 3 4 6 8 12
+</pre>
+
+<li>
+How general is this code?
+
+<ol>
+<li>
+What can we use for <code>Func</code>?
+
+<li>
+What can we use for <code>InItor</code>/<code>OutItor</code>?
+
+</ol>
+<li>
+We ask:
+
+<ol>
+<li>
+<code>Func</code> -- how is <code>f</code> used? <code>f(*first)</code>
+
+<ul>
+<li>
+<code>f</code> can be anything that can be called as a function
+
+<li>
+Can write <code>operator()</code> for objects
+
+<li>
+<span id="Template Functions-Example"></span><strong id="Example">Example</strong>:
+<pre cpp>
+class Plus1 {
+public:
+	int operator()(int n) { return n + 1; }
+};
+
+Plus1 p;
+p(4); // Produces 5
+
+transform(v.begin(), v.end(), w.begin(), Plus1{});
+// Plus1 is a constructor call
+
+// Generalize:
+class Plus {
+	int m;
+public:
+	Plus(int m): m{m} {}
+	int operator()(int n) { return n + m; }
+};
+
+transform(v.begin(), v.end(), w.begin(), Plus{1});
+</pre>
+
+<li>
+<code>Plus{1}</code> is called a <span id="Template Functions-function object"></span><strong id="function object">function object</strong>
+
+<li>
+Advantage of classes -- can maintain state
+<pre cpp>
+class IncreasingPlus {
+	int m = 0;
+public:
+	int operator()(int n) { return n + (m++); }
+	void reset() { m = 0; }
+};
+
+vector&lt;int&gt; v(5, 0); // 0 0 0 0 0
+vector&lt;int&gt; w = v; // 0 0 0 0 0
+
+transform(v.begin(), v.end(), w.begin(), IncreasingPlus{});
+// w = 0 1 2 3 4
+</pre>
+
+<li>
+<span id="Template Functions-Consider:"></span><strong id="Consider:">Consider:</strong> How many <code>int</code>s in a vector <code>v</code> are even?
+<pre cpp>
+vector&lt;int&gt; v ...;
+bool even(int n) { return n % 2 == 0; }
+int x = count_if(v.begin(), v.end(), even); // Counts all even entries
+</pre>
+
+<li>
+Seems a waste to explicitly create the function even
+
+<ul>
+<li>
+In Racket, we would use a lambda
+
+<li>
+In C++:
+<pre cpp>
+int x = count_if(v.begin(), v.end(), [](int n) { return n % 2 = 0 });
+// [] is lambda in C++
+</pre>
+
+</ul>
+</ul>
+<li>
+Iterators:
+
+<ul>
+<li>
+Apply the notion of iteration to other sources of data, e.g. streams
+<pre cpp>
+#include &lt;iterator&gt;
+
+vector&lt;int&gt; v{1,2,3,4,5};
+ostream_iterator&lt;int&gt; out { cout, ", " };
+
+copy(v.begin(), v.end(), out);
+// Prints 1, 2, 3, 4, 5, 
+
+vector&lt;int&gt; v{1,2,3,4,5};
+vector w;
+copy(v.begin(), v.end(), w.begin());
+// ILLEGAL -- no room to hold v
+</pre>
+
+<li>
+Remember -- <code>copy</code> doesn't allocate space in <code>w</code> -- it can't -- it doesn't even know that <code>w</code> is iterating over a vector
+
+<ul>
+<li>
+It doesn't know about <code>w</code> at all, since it only has an iterator
+
+</ul>
+<li>
+But what if we had an iterator whose assignment operator inserts a new item?:
+<pre cpp>
+copy(v.begin(), v.end(), back_inserter(w));
+// Special iterator type
+</pre>
+
+<ul>
+<li>
+<code>back_inserter(w)</code> copies <code>v</code> to the end of <code>w</code>, adding new entries
+
+<ul>
+<li>
+Available for any container which supports <code>push_back</code>
+
+</ul>
+</ul>
+</ul>
+</ol>
+</ul>
+</ul>
+
+</body>
+</html>

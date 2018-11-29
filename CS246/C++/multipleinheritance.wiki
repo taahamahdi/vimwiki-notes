@@ -1,0 +1,88 @@
+= Multiple Inheritance =
+
+* A class can inherit from more than one class
+* (Recall vptrs + vtables)
+{{{cpp
+class A { int a; };
+class B { int b; };
+class C: public A, public B { ... };
+// has fields a and b
+}}}
+* Challenges:
+
+| A  |
+| +a |
+
+| A  |
+| +a |
+
+| B |
+
+| C |
+
+| D |
+	* B is an A, C is an A, D inherits from both B and C
+{{{cpp
+D d;
+d.a; // WRONG - Which a is this? Rejected -- ambiguous
+
+// Instead, use
+d.B::a;
+d.C::a;
+}}}
+* Should there be two `A` objects?
+	* What if we want:
+
+| A |
+
+| B |
+
+| C |
+
+| D |
+
+	* Connected diagonally
+		* (Known as "deadly diamond")
+		* Make `A` a *virtual base class* (virtual inheritance):
+{{{cpp
+class B: virtual public A {...};
+class B: virtual public A {...};
+}}}
+		* How will this be laid out? (Draw same diagonal pattern, virtual labelled on lines from A to B, A to C)
+| vptr     |
+| A fields |
+| B fields |
+| C fields |
+| D fields |
+			* Some pointer should look like `A*`, `B*`, `C*`, `D*`
+			* However, this doesn't look like a `C*`, since a `C*` would be:
+| vptr     |
+| A fields |
+| C fields |
+			* What does g++ do?
+| vptr     |
+| B fields |
+| vptr     |
+| C fields |
+| D fields |
+| vptr     |
+| A fields |
+				* First vptr looks like a pointer to B/D -- but not really?
+					* `B b;` would look like:
+| vptr     |
+| B fields |
+| vptr     |
+| A fields |
+					* B needs to be laid out so we can find its A part -- but the distance to the A part is not always the same
+						* *Solution*: The location of the base class object is stored in the vtable
+				* Second vptr looks like a pointer to C
+				* Third vptr looks like a pointer to A
+				* Diagram doesn't look like all of A,B,C,D simultaneously, but slices of it look like A,B,C,D
+				* Therefore pointer assignment among A,B,C,D changes the address stored in the pointer
+{{{cpp
+D *d = new D;
+A *a = d;
+}}}
+					* `d`'s value shifted to point to the A part when assigning into A
+					* `static_cast`/`dynamic_cast` will make this adjustment; `reinterpret_cast` will not
+

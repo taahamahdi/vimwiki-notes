@@ -1,0 +1,143 @@
+= Template Functions =
+
+{{{cpp
+template<typename T> T min(T x, T y) { return x < y ? x : y; }
+
+int x = 1, y = 2;
+int z = min(x, y);
+// T is int -- compiler will figure that out based on the types
+// of x and y
+// Don't have to say min<int>(x, y) (though technically still legal)
+
+auto f = min(1.0, 3.0); // Compiler will figure out T is double
+}}}
+* `min` works for any type `T` that has `operator<`
+* C++ STL library `<algorithm>` -- suite of template functions, many of which work over iterators
+{{{cpp
+template<typename Itor, typename T>
+Itor find(Itor first, Itor last, const T &val) {
+	while (first != last) {
+		if (first == val) return first;
+		++first;
+	}
+	return last;
+}
+}}}
+	* `count` -- like `find`, but returns the number of occurrences of val
+	* `copy`:
+{{{cpp
+template<typename InItor, typename OutItor>
+OutItor copy(InItor first, InItor last, OutItor result) {
+	// Copies one container range [first, last) to another, starting at result
+	// Does not allocate new memory
+}
+
+// Example:
+vector<int> v {1,2,3,4,5,6,7};
+vector<int> u(4); // 0 0 0 0
+copy(v.begin(), v.begin() + 5, w.begin());
+// w = 2 3 4 5
+}}}
+	* `transform`:
+{{{cpp
+template<typename InItor, typename OutItor, typename Func>
+OutItor transform(inItor first, InItor last, OutItor result, Func f) {
+	while (first != last) {
+		*result = f(*first);
+		++first;
+		++result;
+	}
+	return result;
+}
+
+// Example:
+int add1(int n) { return n + 1; }
+...
+vector v{2,3,5,7,11};
+vector w(v.size()); // 0 0 0 0 0
+transform(v.begin(), v.end(), w.begin(), add1); // 3 4 6 8 12
+}}}
+	* How general is this code?
+		1. What can we use for `Func`?
+		2. What can we use for `InItor`/`OutItor`?
+	* We ask:
+		1. `Func` -- how is `f` used? `f(*first)`
+			* `f` can be anything that can be called as a function
+			* Can write `operator()` for objects
+			* *Example*:
+{{{cpp
+class Plus1 {
+public:
+	int operator()(int n) { return n + 1; }
+};
+
+Plus1 p;
+p(4); // Produces 5
+
+transform(v.begin(), v.end(), w.begin(), Plus1{});
+// Plus1 is a constructor call
+
+// Generalize:
+class Plus {
+	int m;
+public:
+	Plus(int m): m{m} {}
+	int operator()(int n) { return n + m; }
+};
+
+transform(v.begin(), v.end(), w.begin(), Plus{1});
+}}}
+			* `Plus{1}` is called a *function object*
+			* Advantage of classes -- can maintain state
+{{{cpp
+class IncreasingPlus {
+	int m = 0;
+public:
+	int operator()(int n) { return n + (m++); }
+	void reset() { m = 0; }
+};
+
+vector<int> v(5, 0); // 0 0 0 0 0
+vector<int> w = v; // 0 0 0 0 0
+
+transform(v.begin(), v.end(), w.begin(), IncreasingPlus{});
+// w = 0 1 2 3 4
+}}}
+			* *Consider:* How many `int`s in a vector `v` are even?
+{{{cpp
+vector<int> v ...;
+bool even(int n) { return n % 2 == 0; }
+int x = count_if(v.begin(), v.end(), even); // Counts all even entries
+}}}
+			* Seems a waste to explicitly create the function even
+				* In Racket, we would use a lambda
+				* In C++:
+{{{cpp
+int x = count_if(v.begin(), v.end(), [](int n) { return n % 2 = 0 });
+// [] is lambda in C++
+}}}
+		1. Iterators:
+			* Apply the notion of iteration to other sources of data, e.g. streams
+{{{cpp
+#include <iterator>
+
+vector<int> v{1,2,3,4,5};
+ostream_iterator<int> out { cout, ", " };
+
+copy(v.begin(), v.end(), out);
+// Prints 1, 2, 3, 4, 5, 
+
+vector<int> v{1,2,3,4,5};
+vector w;
+copy(v.begin(), v.end(), w.begin());
+// ILLEGAL -- no room to hold v
+}}}
+			* Remember -- `copy` doesn't allocate space in `w` -- it can't -- it doesn't even know that `w` is iterating over a vector
+				* It doesn't know about `w` at all, since it only has an iterator
+			* But what if we had an iterator whose assignment operator inserts a new item?:
+{{{cpp
+copy(v.begin(), v.end(), back_inserter(w));
+// Special iterator type
+}}}
+				* `back_inserter(w)` copies `v` to the end of `w`, adding new entries
+					* Available for any container which supports `push_back`

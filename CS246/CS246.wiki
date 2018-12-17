@@ -38,3 +38,5 @@
 			* [[C++/OOP/coupling+cohesion|Coupling and Cohesion]]
 			* [[C++/exceptionsafety|Exception Safety]]
 			* [[C++/casting|Casting]]
+            * [[C++/multipleinheritance|Multiple Inheritance]]
+            * [[C++/templatefunctions|Template Functions]]
